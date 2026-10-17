@@ -13,7 +13,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 ## Next actions
 
 - [x] Phase 0 foundations: process docs, ADR 0001 (record decisions), ADR 0002 (trunk-based development)
-- [ ] ADR: agent roles
+- [x] ADR 0003: agent roles
 - [ ] ADR: site location is private config
 - [ ] Gate 1: problem spec + recall-first ADR
 - [ ] Spec 0001: project skeleton and CI (spec, then implementation)
@@ -23,6 +23,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 
 ## Later
 - ADR + spec: Claude Code hooks for rules that must always hold (no `git add -A`, no site values, no test edits during bug fixes, `plan.md` kept current)
+- Phase 2, first: ADR + spec for data and artifact versioning. The ADR chooses the object store (for example, AWS S3 or a self-hosted S3-compatible store) and records why. Constraints: works as a DVC remote and for MLflow artifacts; data stays private (ADR 0004)
 - Phase 2: evals for agent personas (seeded PRs the reviewer must catch), run when agent config changes
 - Phase 6: monitoring breaches generate `intent.md`; escalation bands 1σ / 2σ / 3σ
 - Process metrics: first-pass CI success for agent-written PRs, time to first review, DORA metrics

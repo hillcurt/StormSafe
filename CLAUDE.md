@@ -22,6 +22,7 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 5. **Every PR updates `docs/roadmap.md`** "Next actions" so the repo always says what comes next.
 6. Stage files by path; never `git add -A` or `git add .`. Commit no build artifacts, caches, or local data.
 7. If the spec is ambiguous or conflicts with an ADR, stop and ask. Do not guess on anything in "Human only" below.
+8. Review personas (ADR 0003) advise; they never approve or merge. Address their findings or explain in the PR why not.
 
 ## Guardrails
 
@@ -33,6 +34,7 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 | `docs/problem-spec.md`, `docs/adr/` | Draft when asked | Accept / change status |
 | `.github/workflows/train.yml`, `deploy.yml` | Read | Edit, trigger |
 | Model registry stage changes (shadow → production) | Nothing | All |
+| `.claude/agents/` personas (ADR 0003) | Draft when asked | Accept; change a persona's tools or permissions |
 | Secrets, cloud credentials, infra config | Nothing | All |
 
 If a change touches anything in the "Human only" column, say so explicitly at the top of the PR description.
