@@ -1,7 +1,7 @@
 # Plan for spec 0002 — Reviewer agent
 
 **Spec:** `docs/specs/0002-reviewer-agent/spec.md`
-**Status:** approved
+**Status:** done
 
 ## Approach
 The review rules live in one shared file, `REVIEW.md`. The `reviewer` persona reads it and applies it, with read-only tools only. In CI, a workflow saves the PR diff and description to files, has the main agent hand the review to `reviewer`, and posts the result as one comment. The main agent's only extra permission is `gh pr comment`; the reviewer never gets write access.

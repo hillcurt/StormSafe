@@ -1,0 +1,58 @@
+name: ai-review
+
+# Advisory review of every PR by the read-only `reviewer` persona (ADR 0003, spec 0002).
+# Not a required check: the owner decides whether to merge. Rules: REVIEW.md.
+on:
+  pull_request:
+    branches: [trunk]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write # to post the review comment
+  id-token: write # required by claude-code-action
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Save the diff and description for the reviewer
+        run: |
+          mkdir -p .review
+          git diff "origin/${{ github.base_ref }}...HEAD" > .review/pr.diff
+          gh pr view "$PR" --json title,body --jq '"# " + .title + "\n\n" + .body' > .review/pr.md
+
+      - name: Review
+        uses: anthropics/claude-code-action@8251c103ac8c1d761882c86aba1412c7f583c844 # v1.0.213
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Use the reviewer subagent (@agent-reviewer) to review pull request #${{ github.event.pull_request.number }}.
+            Give it these inputs: the diff is in .review/pr.diff, and the title and description are in .review/pr.md.
+
+            When it returns, write its review unchanged to .review/comment.md, then post it with exactly:
+            gh pr comment ${{ github.event.pull_request.number }} --body-file .review/comment.md
+
+            Do not review the code yourself, edit any other file, or run any other command.
+          claude_args: >-
+            --model sonnet
+            --max-turns 30
+            --allowedTools "Agent(reviewer),Read,Write,Bash(gh pr comment:*)"
+
+      - name: Note an incomplete review
+        if: failure()
+        run: |
+          gh pr comment "$PR" --body "AI review did not finish (turn cap, timeout, or error). See the workflow run log. This review is advisory; the owner can merge without it."

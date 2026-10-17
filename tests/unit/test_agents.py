@@ -55,7 +55,8 @@ def test_reviewer_is_read_only() -> None:
 
 def test_ai_review_workflow_is_bounded_and_pinned() -> None:
     wf = AI_REVIEW.read_text()
-    assert re.search(r"anthropics/claude-code-action@[0-9a-f]{40}\b", wf), "pin the action by commit"
+    pinned = re.search(r"anthropics/claude-code-action@[0-9a-f]{40}\b", wf)
+    assert pinned, "pin the action by commit"
     assert "timeout-minutes:" in wf
     assert "--max-turns 30" in wf
     assert "--model sonnet" in wf
