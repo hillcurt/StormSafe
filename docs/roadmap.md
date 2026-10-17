@@ -14,7 +14,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 
 - [x] Phase 0 foundations: process docs, ADR 0001 (record decisions), ADR 0002 (trunk-based development)
 - [x] ADR 0003: agent roles
-- [ ] ADR: site location is private config
+- [x] ADR 0004: site location is private config
 - [ ] Gate 1: problem spec + recall-first ADR
 - [ ] Spec 0001: project skeleton and CI (spec, then implementation)
 - [ ] Spec 0002: reviewer agent (spec, then implementation)
