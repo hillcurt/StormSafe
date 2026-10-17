@@ -16,7 +16,8 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] ADR 0003: agent roles
 - [x] ADR 0004: site location is private config
 - [x] Gate 1: problem spec + ADR 0005 (recall-first target)
-- [ ] Spec 0001: project skeleton and CI (spec, then implementation)
+- [x] Spec 0001: project skeleton and CI — spec approved
+- [ ] Spec 0001: implementation (plan, tests, code)
 - [ ] Spec 0002: reviewer agent (spec, then implementation)
 - [ ] ADRs: container build and registry; deployment target
 - [ ] Spec 0003: local cluster bootstrap (spec, then implementation)
