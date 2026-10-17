@@ -1,7 +1,7 @@
 # CLAUDE.md — agent context for StormSafe
 
 ## What this project is
-StormSafe predicts the risk of lightning near an outdoor pool facility so staff can decide when to clear the water. It is a safety system: a missed strike is far worse than an unneeded closure. It is also an MLOps portfolio project, so process artifacts (specs, ADRs, model card, runbook) matter as much as code.
+StormSafe predicts the probability of a lightning strike within 10 miles of an outdoor pool facility in the next 60 minutes, hourly and on demand, during operating hours (10 AM – 6 PM site time). The pool closes for 30 minutes after any strike within 10 miles. It is a safety system: a missed strike is far worse than an unneeded closure. It is also an MLOps portfolio project, so process artifacts (specs, ADRs, model card, runbook) matter as much as code.
 
 Read `docs/sdlc.md` for the lifecycle and `docs/problem-spec.md` for the problem before doing anything. If the problem spec does not exist yet, Gate 1 has not passed: do not start any work beyond Phase 0.
 
@@ -30,7 +30,7 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 | --- | --- | --- |
 | `src/` ingestion, features, serving, monitoring code | Write, refactor | Merge |
 | `tests/` | Add tests | Delete, skip, or loosen an existing test or tolerance |
-| Label definition, alert thresholds, recall target (set in `docs/problem-spec.md`) | Propose in a PR comment | Change values |
+| Label definition (10 mi / next 60 min), 30-min closure rule, operating hours, alert thresholds, recall target (`docs/problem-spec.md`) | Propose in a PR comment | Change values |
 | `docs/problem-spec.md`, `docs/adr/` | Draft when asked | Accept / change status |
 | `.github/workflows/train.yml`, `deploy.yml` | Read | Edit, trigger |
 | Model registry stage changes (shadow → production) | Nothing | All |
