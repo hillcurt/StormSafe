@@ -40,12 +40,17 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 
 If a change touches anything in the "Human only" column, say so explicitly at the top of the PR description.
 
-## Conventions (set by spec 0001; update when it lands)
+## Conventions (set by spec 0001)
 - Python 3.12, `uv` for env and deps, `src/` layout, package `stormsafe`
 - `ruff` (lint + format), `mypy --strict` on `src/`, `pytest`
 - Config via typed settings (pydantic-settings); no hard-coded paths or thresholds in code
 - Data pipelines write intermediate results to disk in chunks (e.g., one Parquet file per day) so long runs can resume
 - Every function that touches time uses timezone-aware UTC datetimes
 
-## Commands (fill in once spec 0001 lands)
-- _Set by spec 0001._
+## Commands
+- Setup: `uv sync`, then `cp .env.example .env` and fill in the site values (private, ADR 0004)
+- Test: `uv run pytest`
+- Lint: `uv run ruff check . && uv run ruff format --check .`
+- Format: `uv run ruff format .`
+- Types: `uv run mypy src`
+- Everything CI runs: `uv sync --locked && uv run ruff check . && uv run ruff format --check . && uv run mypy src && uv run pytest`

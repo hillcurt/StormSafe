@@ -1,7 +1,7 @@
 # Plan for spec 0001 — Project skeleton and CI
 
 **Spec:** `docs/specs/0001-project-skeleton/spec.md`
-**Status:** approved
+**Status:** done
 
 ## Approach
 A minimal `uv` project with a `src/` layout and a single typed `Settings` class. Every required value fails loudly when missing. CI runs the same commands a developer runs locally.
