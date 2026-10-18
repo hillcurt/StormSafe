@@ -12,7 +12,7 @@ Predicts the risk of lightning near an outdoor pool facility, so staff know when
 | Phase | Artifact | Gate |
 | --- | --- | --- |
 | 0 Foundations | `CLAUDE.md`, `docs/sdlc.md`, project skeleton, CI | ⏳ |
-| 1 Frame | `docs/problem-spec.md` | — |
+| 1 Frame | `docs/problem-spec.md` | ✅ passed |
 | 2 Data | `docs/data-contract.md` | — |
 | 3 Develop | MLflow runs vs. baselines | — |
 | 4 Evaluate | `docs/model-card.md` | — |
