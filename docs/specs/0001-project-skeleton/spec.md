@@ -1,6 +1,6 @@
 # Spec 0001 — Project skeleton and CI
 
-**Status:** approved
+**Status:** done
 **Phase:** 0
 
 ## Goal
