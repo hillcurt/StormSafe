@@ -1,6 +1,6 @@
 # Spec 0003 — Local cluster bootstrap
 
-**Status:** draft
+**Status:** approved
 **Phase:** 0
 
 ## Goal
@@ -50,7 +50,7 @@ A local `kind` cluster with Argo CD that the owner can build from scratch with o
 - **`CLAUDE.md` guardrail row:** naming the digest file.
 
 ## Open questions
-Answer before status → approved.
-1. **Owner's machine:** OS and CPU (for example, macOS on Apple Silicon), and the container runtime (Docker Desktop, Colima, OrbStack)? This sets the tested versions in `docs/cluster.md`; the pinned images are multi-arch either way.
-2. **Argo CD version:** pin the latest stable release at implementation time (its commit SHA and image digests recorded in `plan.md`)?
-3. **Schema validation in CI:** `kubeconform` adds one pinned tool to `ci.yml`. Keep it, or stop at `kubectl kustomize` rendering?
+Answered by the owner:
+1. **Owner's machine:** macOS on Apple Silicon (arm64), Docker Desktop. Every pinned image must have an `arm64` build; `docs/cluster.md` lists the tested Docker Desktop, `kind`, and `kubectl` versions.
+2. **Argo CD:** the latest stable release at implementation time, full **non-HA** install (the UI is needed for the demo). Its commit SHA and image digests are recorded in `plan.md`.
+3. **Manifest checks in CI:** render with `kubectl kustomize` and validate with `kubeconform` (pinned), using the published CRD schema for the Argo CD `Application`. A throwaway `kind` cluster in CI is deferred (roadmap "Later").
