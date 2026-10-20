@@ -36,21 +36,38 @@ jobs:
           gh pr view "$PR" --json title,body --jq '"# " + .title + "\n\n" + .body' > .review/pr.md
 
       - name: Review
+        id: review
         uses: anthropics/claude-code-action@8251c103ac8c1d761882c86aba1412c7f583c844 # v1.0.213
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
-            Use the reviewer subagent (@agent-reviewer) to review pull request #${{ github.event.pull_request.number }}.
-            Give it these inputs: the diff is in .review/pr.diff, and the title and description are in .review/pr.md.
+            You are the StormSafe `reviewer` persona. Read .claude/agents/reviewer.md and follow its instructions exactly.
+            Review pull request #${{ github.event.pull_request.number }}: the diff is in .review/pr.diff, and the title and description are in .review/pr.md.
 
-            When it returns, write its review unchanged to .review/comment.md, then post it with exactly:
-            gh pr comment ${{ github.event.pull_request.number }} --body-file .review/comment.md
-
-            Do not review the code yourself, edit any other file, or run any other command.
+            Your final message must be the review itself, in the persona's output format, and nothing else.
           claude_args: >-
             --model sonnet
             --max-turns 30
-            --allowedTools "Agent(reviewer),Read,Write,Bash(gh pr comment:*)"
+            --allowedTools "Read,Grep,Glob"
+            --disallowedTools "Bash,Edit,Write,NotebookEdit,Agent,WebFetch,WebSearch"
+
+      # The workflow posts the review, so the model needs no write or shell access.
+      - name: Post the review
+        if: success()
+        env:
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if [ -s "$EXECUTION_FILE" ]; then
+            jq -r '[.[] | select(.type == "result")] | last | .result // empty' "$EXECUTION_FILE" > .review/result.md
+            # Unwrap the answer if the model put the whole review in a code fence.
+            if head -n 1 .review/result.md | grep -q '^```'; then
+              sed -i '1d;$ { /^```$/d }' .review/result.md
+            fi
+          fi
+          if grep -q '^## AI review (advisory)' .review/result.md 2>/dev/null; then
+            cp .review/result.md .review/comment.md
+            gh pr comment "$PR" --body-file .review/comment.md
+          fi
 
       - name: Note an incomplete review
         if: failure()
@@ -61,5 +78,5 @@ jobs:
         if: success()
         run: |
           if [ ! -s .review/comment.md ]; then
-            gh pr comment "$PR" --body "AI review was skipped and produced no review. This is expected on a PR that changes \`ai-review.yml\`: the action only runs a workflow that matches the copy on \`trunk\`. See the workflow run log. This review is advisory; the owner can merge without it."
+            gh pr comment "$PR" --body "AI review produced no review. Likely causes: the PR changes \`ai-review.yml\` (the action only runs a workflow that matches the copy on \`trunk\`), or the model's answer was not in the reviewer's output format. See the workflow run log. This review is advisory; the owner can merge without it."
           fi

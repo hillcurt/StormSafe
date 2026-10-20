@@ -81,3 +81,27 @@ def test_workflows_pin_checkout_by_commit() -> None:
         assert "actions/checkout@v4" not in text, f"{wf.name}: checkout v4 uses deprecated Node 20"
         for ref in re.findall(r"actions/checkout@(\S+)", text):
             assert re.fullmatch(r"[0-9a-f]{40}", ref), f"{wf.name}: pin actions/checkout by commit"
+
+
+def test_ci_review_runs_the_persona_read_only() -> None:
+    """In CI the model runs as the reviewer itself: persona instructions, read-only tools."""
+    wf = AI_REVIEW.read_text()
+    assert ".claude/agents/reviewer.md" in wf, "the CI prompt must load the persona's instructions"
+    assert "Agent(" not in wf, "no delegation step: the model is the reviewer"
+    allowed = re.search(r'--allowedTools "([^"]*)"', wf)
+    assert allowed, "declare the allowed tools"
+    tools = {t.strip() for t in allowed.group(1).split(",") if t.strip()}
+    persona = {t.strip() for t in frontmatter(AGENTS / "reviewer.md")["tools"].split(",")}
+    assert tools == persona, f"CI tools {tools} must match the persona's {persona}"
+    denied = re.search(r'--disallowedTools "([^"]*)"', wf)
+    assert denied, "explicitly deny write and shell tools"
+    for tool in ("Bash", "Edit", "Write"):
+        assert tool in denied.group(1), f"deny {tool}"
+
+
+def test_ci_review_is_posted_by_the_workflow() -> None:
+    """The workflow, not the model, posts the review, and only if it looks like one."""
+    wf = AI_REVIEW.read_text()
+    assert "steps.review.outputs.execution_file" in wf
+    assert "## AI review (advisory)" in wf
+    assert 'gh pr comment "$PR" --body-file .review/comment.md' in wf

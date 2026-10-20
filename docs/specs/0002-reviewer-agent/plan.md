@@ -4,7 +4,9 @@
 **Status:** done
 
 ## Approach
-The review rules live in one shared file, `REVIEW.md`. The `reviewer` persona reads it and applies it, with read-only tools only. In CI, a workflow saves the PR diff and description to files, has the main agent hand the review to `reviewer`, and posts the result as one comment. The main agent's only extra permission is `gh pr comment`; the reviewer never gets write access.
+The review rules live in one shared file, `REVIEW.md`. The `reviewer` persona reads it and applies it, with read-only tools only. In CI, a workflow saves the PR diff and description to files and runs the model **as** the reviewer: the prompt loads `.claude/agents/reviewer.md`, tools are limited to the persona's read-only set, and write and shell tools are explicitly denied. A plain workflow step takes the model's final answer from the action's execution file and posts it as one comment, only if it is in the persona's output format. The model gets no write or shell access at all.
+
+**Changed after merge:** the first design had a main agent delegate to the `reviewer` subagent, then write and post its answer. On its first real run (#10) the main agent ended after 3 turns without delegating or posting, with no error. Running the persona directly removes that hop and the model's `Write` and `gh` permissions.
 
 ## Files
 | File | Create / change | Why |
