@@ -25,6 +25,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] ADR 0006: container build and registry (GHCR, immutable tags, deploy by digest)
 - [x] ADR 0007: deployment target (`kind` + Argo CD, pull-based GitOps, shadow mode only)
 - [x] Spec 0002 fix: earlier AI findings must be fixed or answered (REVIEW.md pass 8, PR template "Review findings")
+- [x] `CLAUDE.md`: agent may draft in-repo infra config in PRs; applying it to a cluster, Secrets, and credentials stay human-only
 - [ ] Spec 0003: local cluster bootstrap (spec, then implementation)
 
 ## Later
