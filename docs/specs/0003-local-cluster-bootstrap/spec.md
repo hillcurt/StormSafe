@@ -9,7 +9,7 @@ A local `kind` cluster with Argo CD that the owner can build from scratch with o
 ## Inputs / outputs
 - **Creates:**
   - `deploy/cluster/kind-config.yaml` — single-node cluster; node image pinned by digest. No host ports: Argo CD is reached with `kubectl port-forward`.
-  - `deploy/argocd/kustomization.yaml` — installs Argo CD from its upstream manifest at a pinned release tag, into the `argocd` namespace.
+  - `deploy/argocd/kustomization.yaml` — installs Argo CD from its upstream manifest, into the `argocd` namespace. The manifest URL is pinned to the release's **commit SHA** (tags can move), and Argo CD's images are pinned **by digest** through a Kustomize `images:` override, matching how the `kind` node image and the `Dockerfile` base are pinned.
   - `deploy/argocd/application.yaml` — the `stormsafe` `Application`: this repo, revision `trunk`, path `deploy/overlays/local`, automated sync with prune and self-heal, destination namespace `stormsafe`.
   - `deploy/base/` — the `stormsafe` namespace, and nothing else yet.
   - `deploy/overlays/local/kustomization.yaml` — the local overlay. When images exist, the deployed image digest lives here (ADR 0007).
@@ -25,7 +25,7 @@ A local `kind` cluster with Argo CD that the owner can build from scratch with o
 
 ## Acceptance criteria
 - [ ] The `kind` node image is pinned by digest (test)
-- [ ] Argo CD is installed from a pinned release tag: no `stable`, `latest`, or branch refs (test)
+- [ ] Argo CD is installed from a manifest pinned to a commit SHA, with every Argo CD image pinned by digest: no tags, `stable`, `latest`, or branch refs (test)
 - [ ] The `Application` targets this repo at revision `trunk`, path `deploy/overlays/local`, with automated sync, prune, and self-heal (test)
 - [ ] No `Secret` object anywhere under `deploy/`, and no site values (test; site guard from Spec 0001 still applies)
 - [ ] Every kustomization renders and passes schema validation, and the scripts pass `shellcheck` (CI job)
@@ -52,5 +52,5 @@ A local `kind` cluster with Argo CD that the owner can build from scratch with o
 ## Open questions
 Answer before status → approved.
 1. **Owner's machine:** OS and CPU (for example, macOS on Apple Silicon), and the container runtime (Docker Desktop, Colima, OrbStack)? This sets the tested versions in `docs/cluster.md`; the pinned images are multi-arch either way.
-2. **Argo CD version:** pin the latest stable release at implementation time (recorded in `plan.md`)?
+2. **Argo CD version:** pin the latest stable release at implementation time (its commit SHA and image digests recorded in `plan.md`)?
 3. **Schema validation in CI:** `kubeconform` adds one pinned tool to `ci.yml`. Keep it, or stop at `kubectl kustomize` rendering?

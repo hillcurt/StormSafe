@@ -22,7 +22,7 @@ Nothing moves to the next phase until its gate passes. Monitoring misses loop ba
 
 Each change leaves a chain of committed artifacts, one folder per spec: `docs/specs/NNNN-short-name/spec.md` → `plan.md` → tests and code → a reviewed PR. The commit history is the audit trail.
 
-1. **Spec** (human) — `spec.md` from `docs/specs/_template/`. Status `draft` → `approved`.
+1. **Spec** (human-owned; the agent drafts when asked) — `spec.md` from `docs/specs/_template/`. Status `draft` → `approved`.
 2. **Plan** (agent drafts, human approves) — `plan.md` beside the spec: files, tests, PR slicing, open questions. Committed as the first commit on the branch, before any code, and kept current: a departure from the plan updates `plan.md` in the same commit.
 3. **Tests first** (agent) — failing tests encoding acceptance criteria.
 4. **Implement** (agent) — until tests pass, on a short-lived branch off `trunk`.
