@@ -19,7 +19,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] Spec 0001: project skeleton and CI — spec approved
 - [x] Spec 0001: implementation (plan, tests, code)
 - [x] Spec 0002: reviewer agent — spec approved
-- [ ] Spec 0002: implementation (plan, tests, code)
+- [x] Spec 0002: implementation (plan, tests, code)
 - [ ] ADRs: container build and registry; deployment target
 - [ ] Spec 0003: local cluster bootstrap (spec, then implementation)
 

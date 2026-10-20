@@ -26,7 +26,7 @@ Each change leaves a chain of committed artifacts, one folder per spec: `docs/sp
 2. **Plan** (agent drafts, human approves) — `plan.md` beside the spec: files, tests, PR slicing, open questions. Committed as the first commit on the branch, before any code, and kept current: a departure from the plan updates `plan.md` in the same commit.
 3. **Tests first** (agent) — failing tests encoding acceptance criteria.
 4. **Implement** (agent) — until tests pass, on a short-lived branch off `trunk`.
-5. **Review** (automated) — `ci.yml` checks, plus an advisory AI review on the PR once the reviewer persona exists.
+5. **Review** (automated) — `ci.yml` checks, plus an advisory review by the read-only `reviewer` persona against `REVIEW.md` (`.claude/agents/reviewer.md`, run on every PR by `ai-review.yml`; ADR 0003). The agent addresses its findings or explains why not.
 6. **Merge** (human) — read the diff, merge. No auto-merge.
 
 Rules that must always hold are enforced by tests, CI checks, or hooks, not by instructions alone.

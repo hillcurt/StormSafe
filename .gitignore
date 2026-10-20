@@ -25,3 +25,6 @@ mlartifacts/
 .DS_Store
 .idea/
 .vscode/
+
+# AI review scratch files (ai-review.yml)
+.review/

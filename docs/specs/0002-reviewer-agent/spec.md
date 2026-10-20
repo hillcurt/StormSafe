@@ -1,6 +1,6 @@
 # Spec 0002 — Reviewer agent
 
-**Status:** approved
+**Status:** done
 **Phase:** 0
 
 ## Goal
