@@ -15,7 +15,7 @@ StormSafe's serving layer (Phase 5) and its scheduled jobs run as containers in 
 
 ## Consequences
 - Every running pod traces to a commit: digest → tag → commit on `trunk`.
-- A public image exposes code that is already public, and nothing else. The privacy guarantees of ADR 0004 hold as long as the image never contains a model or data; the reviewer and `infra-reviewer` personas check Dockerfile changes for this.
+- A public image exposes code that is already public, and nothing else. The privacy guarantees of ADR 0004 hold as long as the image never contains a model or data; the `reviewer` persona's security and privacy pass checks Dockerfile changes for this. The `infra-reviewer` persona (ADR 0003) does not exist yet; it is added with the container build spec, so until then the owner's review of Dockerfile changes is the main guard.
 - Serving needs a reachable MLflow registry at startup. Where model artifacts live is decided in the data and artifact versioning ADR (roadmap, "Later"), before Phase 5.
 - Two-platform builds take longer in CI. Layer caching through the GitHub Actions cache keeps that down.
 - `sha-*` images pile up. A retention rule (keep releases, prune old `sha-*`) is part of the build spec.
