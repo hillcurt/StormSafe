@@ -31,7 +31,7 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 | `src/` ingestion, features, serving, monitoring code | Write, refactor | Merge |
 | `tests/` | Add tests | Delete, skip, or loosen an existing test or tolerance |
 | Label definition (10 mi / next 60 min), 30-min closure rule, operating hours, alert thresholds, recall target (`docs/problem-spec.md`) | Propose in a PR comment | Change values |
-| `docs/problem-spec.md`, `docs/adr/`, `docs/specs/*/spec.md` | Draft when asked | Accept / change status (a spec's `approved`) |
+| `docs/problem-spec.md`, `docs/adr/`, `docs/specs/*/spec.md` | Draft when asked | Accept / change status (a spec's `approved` and `done` too). A status change in an agent's PR takes effect when the owner merges it |
 | `.github/workflows/train.yml`, `deploy.yml` | Read | Edit, trigger |
 | Model registry stage changes (shadow → production) | Nothing | All |
 | `.claude/agents/` personas (ADR 0003) | Draft when asked | Accept; change a persona's tools or permissions |
