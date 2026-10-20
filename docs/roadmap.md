@@ -30,6 +30,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 
 ## Later
 - ADR 0003 amendment + spec: AI findings as inline review threads, with "Require conversation resolution before merging" on `trunk`, so every finding must be resolved (acknowledged, not agreed) before merge. Makes findings a merge gate, so the owner decides
+- `CLAUDE.md` rule: the agent may write workflows, but any new or widened `permissions:` is human-accepted. Lands with the container build spec, the first workflow with `packages: write` (from the reviewer on #12)
 - Spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention), per ADR 0006, before Phase 5
 - ADR + spec: Claude Code hooks for rules that must always hold (no `git add -A`, no site values, no test edits during bug fixes, `plan.md` kept current)
 - Phase 2, first: ADR + spec for data and artifact versioning. The ADR chooses the object store (for example, AWS S3 or a self-hosted S3-compatible store) and records why. Constraints: works as a DVC remote and for MLflow artifacts; data stays private (ADR 0004)
