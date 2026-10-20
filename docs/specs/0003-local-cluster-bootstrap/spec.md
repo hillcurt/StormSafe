@@ -26,6 +26,7 @@ A local `kind` cluster with Argo CD that the owner can build from scratch with o
 ## Acceptance criteria
 - [ ] The `kind` node image is pinned by digest (test)
 - [ ] Argo CD is installed from a manifest pinned to a commit SHA, with every Argo CD image pinned by digest: no tags, `stable`, `latest`, or branch refs (test)
+- [ ] Every pinned image digest (`kind` node, Argo CD) is a multi-arch index that includes `linux/arm64`, so it runs on the owner's Apple Silicon machine (CI check: inspect each digest's manifest list)
 - [ ] The `Application` targets this repo at revision `trunk`, path `deploy/overlays/local`, with automated sync, prune, and self-heal (test)
 - [ ] No `Secret` object anywhere under `deploy/`, and no site values (test; site guard from Spec 0001 still applies)
 - [ ] Every kustomization renders and passes schema validation, and the scripts pass `shellcheck` (CI job)
@@ -33,7 +34,7 @@ A local `kind` cluster with Argo CD that the owner can build from scratch with o
 - [ ] `cluster-up.sh` never prints a password or token: it only prints the command that reads the admin password and never runs that command itself (test checks the script)
 - [ ] **Demo:** on the owner's machine, `scripts/cluster-up.sh` ends with the `stormsafe` application Synced and Healthy (owner runs it and attaches a screenshot of the Argo CD UI to the implementation PR)
 - [ ] `infra-reviewer` is read-only, `Read`, `Grep`, `Glob` only (test, same guard as `reviewer`)
-- [ ] `docs/cluster.md` covers bring-up, UI access, teardown, and post-rebuild steps
+- [ ] `docs/cluster.md` covers bring-up, UI access, teardown, and post-rebuild steps, and lists the tested Docker Desktop, `kind`, and `kubectl` versions
 - [ ] `CLAUDE.md` and ADR 0006 updated as above; `docs/roadmap.md` Next actions updated
 
 ## Out of scope
