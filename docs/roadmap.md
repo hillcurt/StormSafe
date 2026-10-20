@@ -26,7 +26,8 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] ADR 0007: deployment target (`kind` + Argo CD, pull-based GitOps, shadow mode only)
 - [x] Spec 0002 fix: earlier AI findings must be fixed or answered (REVIEW.md pass 8, PR template "Review findings")
 - [x] `CLAUDE.md`: agent may draft in-repo infra config in PRs; applying it to a cluster, Secrets, and credentials stay human-only
-- [ ] Spec 0003: local cluster bootstrap (spec, then implementation)
+- [ ] Spec 0003: local cluster bootstrap — spec drafted; open questions to answer before approval
+- [ ] Spec 0003: implementation (plan, tests, code)
 
 ## Later
 - ADR 0003 amendment + spec: AI findings as inline review threads, with "Require conversation resolution before merging" on `trunk`, so every finding must be resolved (acknowledged, not agreed) before merge. Makes findings a merge gate, so the owner decides
