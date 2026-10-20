@@ -34,6 +34,8 @@ jobs:
           mkdir -p .review
           git diff "origin/${{ github.base_ref }}...HEAD" > .review/pr.diff
           gh pr view "$PR" --json title,body --jq '"# " + .title + "\n\n" + .body' > .review/pr.md
+          gh api "repos/${{ github.repository }}/issues/$PR/comments" --paginate \
+            --jq '.[] | "### " + .user.login + " at " + .created_at + "\n\n" + .body + "\n"' > .review/comments.md
 
       - name: Review
         id: review
@@ -42,7 +44,7 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             You are the StormSafe `reviewer` persona. Read .claude/agents/reviewer.md and follow its instructions exactly.
-            Review pull request #${{ github.event.pull_request.number }}: the diff is in .review/pr.diff, and the title and description are in .review/pr.md.
+            Review pull request #${{ github.event.pull_request.number }}: the diff is in .review/pr.diff, and the title and description are in .review/pr.md, and earlier PR comments (including earlier AI reviews) are in .review/comments.md.
 
             Your final message must be the review itself, in the persona's output format, and nothing else.
           claude_args: >-

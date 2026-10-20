@@ -16,5 +16,8 @@ Implements `docs/specs/NNNN-short-name/spec.md`, following its `plan.md`
 - [ ] New tests encode the acceptance criteria
 - [ ] No existing test deleted, skipped, or loosened
 
+## Review findings
+<!-- one line per finding from an AI review on this PR: "fixed in <commit>" or "declined: <reason>". Unanswered findings come back as blocking on the next review (REVIEW.md pass 8). Write "None yet" before the first review. -->
+
 ## Agent notes
 <!-- if an agent wrote this: departures from plan.md (and the commit that updated it), and anything it was unsure about -->
