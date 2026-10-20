@@ -105,3 +105,15 @@ def test_ci_review_is_posted_by_the_workflow() -> None:
     assert "steps.review.outputs.execution_file" in wf
     assert "## AI review (advisory)" in wf
     assert 'gh pr comment "$PR" --body-file .review/comment.md' in wf
+
+
+def test_earlier_findings_must_be_answered() -> None:
+    """An AI finding that is neither fixed nor answered resurfaces on the next review."""
+    review = (ROOT / "REVIEW.md").read_text().lower()
+    assert "earlier findings" in review, "REVIEW.md needs a pass for earlier AI findings"
+    template = (ROOT / ".github" / "pull_request_template.md").read_text()
+    assert "## Review findings" in template, "the PR template needs a place to answer findings"
+    persona = (AGENTS / "reviewer.md").read_text()
+    assert ".review/comments.md" in persona, "the reviewer must read earlier PR comments"
+    wf = AI_REVIEW.read_text()
+    assert "> .review/comments.md" in wf, "the workflow must save PR comments for the reviewer"
