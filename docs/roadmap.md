@@ -22,10 +22,12 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] Spec 0002: implementation (plan, tests, code)
 - [x] Spec 0002 fix: note a skipped AI review; pin `actions/checkout` v6.1.0 by commit
 - [x] Spec 0002 fix: run the reviewer directly in CI (no subagent hop); the workflow posts its review
-- [ ] ADRs: container build and registry; deployment target
+- [x] ADR 0006: container build and registry (GHCR, immutable tags, deploy by digest)
+- [x] ADR 0007: deployment target (`kind` + Argo CD, pull-based GitOps, shadow mode only)
 - [ ] Spec 0003: local cluster bootstrap (spec, then implementation)
 
 ## Later
+- Spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention), per ADR 0006, before Phase 5
 - ADR + spec: Claude Code hooks for rules that must always hold (no `git add -A`, no site values, no test edits during bug fixes, `plan.md` kept current)
 - Phase 2, first: ADR + spec for data and artifact versioning. The ADR chooses the object store (for example, AWS S3 or a self-hosted S3-compatible store) and records why. Constraints: works as a DVC remote and for MLflow artifacts; data stays private (ADR 0004)
 - Phase 2: evals for agent personas (seeded PRs the reviewer must catch), run when agent config changes

@@ -50,5 +50,6 @@ Guardrails for what agents may touch live in `CLAUDE.md`.
 | --- | --- | --- |
 | `ci.yml` | every PR and every push to `trunk` | lint, types, tests, data-contract checks |
 | `train.yml` | manual | retrain, log to MLflow, metric-regression gate |
-| `deploy.yml` | manual + approval | promote registry stage, deploy |
+| `build.yml` | every PR (build only); push to `trunk` and `vX.Y.Z` tags (build and push) | container image to GHCR, tagged by commit or release (ADR 0006) |
+| `deploy.yml` | manual + approval | promote registry stage; open the release PR that sets the image digest for Argo CD (ADR 0007) |
 | nightly outcomes job | nightly | join yesterday's predictions to observed GLM strikes; log recall, precision, and coverage |
