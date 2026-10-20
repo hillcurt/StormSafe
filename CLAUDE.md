@@ -36,7 +36,9 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 | Model registry stage changes (shadow → production) | Nothing | All |
 | `.claude/agents/` personas (ADR 0003) | Draft when asked | Accept; change a persona's tools or permissions |
 | Site location: latitude, longitude, time zone (ADR 0004) | Never write it into the repo, PRs, commit messages, or logs | Set it in local `.env` and the cluster Secret |
-| Secrets, cloud credentials, infra config | Nothing | All |
+| Infra config in the repo: `deploy/` manifests, the `kind` cluster config, bootstrap scripts, `Dockerfile` | Write them in a PR | Accept; change the deployed image digest (a release, ADR 0007). Other fields in the file that holds the digest are agent-editable |
+| Running anything against a live cluster: those bootstrap scripts, `kind create`, `kubectl apply`, Argo CD syncs and rollbacks | Nothing | All |
+| Secrets, cloud credentials | Nothing | All |
 
 If a change touches anything in the "Human only" column, say so explicitly at the top of the PR description.
 
