@@ -13,6 +13,7 @@ StormSafe is a safety system: a missed lightning strike is far worse than an unn
 5. **ADR conflicts.** Nothing contradicts an accepted ADR. Examples: deploying `latest`, unpinned versions, long-lived branches, a persona gaining write tools.
 6. **Security and privacy.** No keys, tokens, passwords, kubeconfigs, or Secret manifests with real values. No site location values (ADR 0004). No `.env` file (`.env.example` is fine). No build artifacts or caches (`.pyc`, `__pycache__/`, `data/`).
 7. **Scope.** Nothing outside the spec's scope, and nothing from its out-of-scope list.
+8. **Earlier findings.** Every finding from an earlier AI review on this PR is either fixed in the diff or answered, in the PR description's "Review findings" section or a PR comment, with a reason. A finding that is neither is **blocking**: name it and the review it came from. A declined finding with a reason is answered; don't argue it again unless the reason is wrong.
 
 ## Severity
 
