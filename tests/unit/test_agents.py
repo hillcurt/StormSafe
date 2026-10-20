@@ -63,3 +63,21 @@ def test_ai_review_workflow_is_bounded_and_pinned() -> None:
     assert "contents: write" not in wf
     assert "draft == false" in wf
     assert "if: failure()" in wf, "post a note when the review does not finish"
+
+
+def test_ai_review_notes_a_skipped_review() -> None:
+    """A review the action skips (e.g. a PR that changes this workflow) must not pass silently."""
+    wf = AI_REVIEW.read_text()
+    step = re.search(r"- name: Note a skipped review\n(.*?)(?=\n      - |\Z)", wf, re.DOTALL)
+    assert step, "add a step that notes a skipped review"
+    assert "if: success()" in step.group(1)
+    assert "[ ! -s .review/comment.md ]" in step.group(1)
+    assert "gh pr comment" in step.group(1)
+
+
+def test_workflows_pin_checkout_by_commit() -> None:
+    for wf in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
+        text = wf.read_text()
+        assert "actions/checkout@v4" not in text, f"{wf.name}: checkout v4 uses deprecated Node 20"
+        for ref in re.findall(r"actions/checkout@(\S+)", text):
+            assert re.fullmatch(r"[0-9a-f]{40}", ref), f"{wf.name}: pin actions/checkout by commit"
