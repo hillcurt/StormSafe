@@ -31,8 +31,9 @@ while read -r ref; do
     warn "$name:$tag now resolves to $current (pinned $digest)"
   fi
 
-  # Anonymous pulls can be rate limited (public.ecr.aws answers TOOMANYREQUESTS). Retry once,
-  # then read Docker official images from Docker Hub, which serves the same digest.
+  # Anonymous pulls can be rate limited (public.ecr.aws answers TOOMANYREQUESTS). Try twice; the
+  # third try reads Docker official images (public.ecr.aws/docker/...) from Docker Hub, which
+  # serves the same digest. For any other registry it is simply one more retry.
   for source in "$name" "$name" "${name/#public.ecr.aws\/docker\//docker.io/}"; do
     if manifest="$(crane manifest "$source@$digest" 2>&1)"; then
       [[ "$source" != "$name" ]] && echo "note $name: read $digest from $source (same content address)"
