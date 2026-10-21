@@ -28,8 +28,10 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] `CLAUDE.md`: agent may draft in-repo infra config in PRs; applying it to a cluster, Secrets, and credentials stay human-only
 - [x] Spec 0003: local cluster bootstrap — spec approved
 - [ ] Spec 0003: implementation (plan, tests, code)
+- [x] `CLAUDE.md`: the agent runs `infra-reviewer` locally before opening infra PRs and answers its findings in the PR
 
 ## Later
+- `infra-reviewer` follows `REVIEW.md` like `reviewer`: reads earlier comments, treats unanswered findings as blocking (pass 8); a test keeps both personas pointed at `REVIEW.md`. Before wiring it into `ai-review.yml`
 - Spec: throwaway `kind` cluster in CI that runs `cluster-up.sh` on PRs touching `deploy/`; first settle in `CLAUDE.md` whether a disposable CI cluster counts as "a live cluster" (human-only). Worth it once there's a real workload
 - Automated dependency update PRs (Renovate or Dependabot) for the commit- and digest-pinned actions and images
 - ADR 0003 amendment + spec: AI findings as inline review threads, with "Require conversation resolution before merging" on `trunk`, so every finding must be resolved (acknowledged, not agreed) before merge. Makes findings a merge gate, so the owner decides
