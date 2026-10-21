@@ -14,9 +14,9 @@ Every external reference is pinned: the `kind` node image and the Argo CD images
 | `kind` (CLI, owner installs) | v0.33.0 | — |
 | `kind` node image | `kindest/node:v1.37.0` | `sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5` (from the kind v0.33.0 release notes) |
 | Argo CD (non-HA `install.yaml`) | v3.5.6, latest stable | commit `c2b1e3017e2cec86b122172e861dcd026453ae44` |
-| `quay.io/argoproj/argocd` | v3.5.6 | digest in `deploy/argocd/kustomization.yaml` |
-| `ghcr.io/dexidp/dex` | v2.45.1 (as shipped by Argo CD v3.5.6) | digest in `deploy/argocd/kustomization.yaml` |
-| `public.ecr.aws/docker/library/redis` | 8.2.3-alpine (as shipped by Argo CD v3.5.6) | digest in `deploy/argocd/kustomization.yaml` |
+| `quay.io/argoproj/argocd` | v3.5.6 | `sha256:8e5cc5bb008df8a09dba439462e58c94c55b7735888d3ebde0c25fc05e4e5335` |
+| `ghcr.io/dexidp/dex` | v2.45.1 (as shipped by Argo CD v3.5.6) | `sha256:8499afd690c437f52301efd2b05b2455da5bd2dfc20332cd697dc9937f808462` |
+| `public.ecr.aws/docker/library/redis` | 8.2.3-alpine (as shipped by Argo CD v3.5.6) | `sha256:08ad0b1d280850169a790dba1393ff7a90aef951fc19632cf4d3ce4f78e679ba` |
 | `kubectl` (CI, via `azure/setup-kubectl` v5.2.0 by commit) | v1.37.1 | — |
 | `kubeconform` (CI) | v0.8.0 | SHA-256 checked |
 | `shellcheck` (CI) | v0.11.0 | SHA-256 checked |
@@ -33,7 +33,7 @@ Every external reference is pinned: the `kind` node image and the Argo CD images
 | `deploy/base/kustomization.yaml`, `namespace.yaml` | Create | The `stormsafe` namespace only |
 | `deploy/overlays/local/kustomization.yaml` | Create | Local overlay; future home of the deployed digest (ADR 0007) |
 | `scripts/cluster-up.sh`, `scripts/cluster-down.sh` | Create | Idempotent bring-up; teardown |
-| `scripts/check-image-pins.sh` | Create | CI helper: each `name:tag@digest` must be a multi-arch index with `linux/arm64`; warns, with the current digest, when the tag has moved |
+| `scripts/check-image-pins.sh` | Create | CI helper: each `name:tag@digest` must be a multi-arch index with `linux/arm64`; warns, with the current digest, when the tag has moved. Findings are also PR annotations. When `public.ecr.aws` rate-limits (it did on this PR), Docker official images are read from Docker Hub by the same digest |
 | `docs/cluster.md` | Create | Prerequisites and tested versions, bring-up, UI, teardown, post-rebuild steps |
 | `.claude/agents/infra-reviewer.md` | Create | Read-only persona (`Read`, `Grep`, `Glob`) |
 | `tests/unit/test_deploy.py` | Create | Guards on all of the above |
@@ -62,6 +62,6 @@ One PR. It is mostly YAML and two short scripts.
 
 ## Risks and open questions
 - **Demo before merge.** The `Application` tracks `trunk`, so before this PR merges Argo CD would find no `deploy/overlays/local` there. `cluster-up.sh` reads an optional `STORMSAFE_REVISION` (default `trunk`) and, only when it is set, patches the live `Application` to that branch. The committed file still says `trunk` (tested). The owner runs `STORMSAFE_REVISION=spec-0003-local-cluster-bootstrap scripts/cluster-up.sh` for the screenshot, then a plain run after merge moves it back to `trunk`.
-- **Argo CD image digests** could not be read from this agent's sandbox (registry hosts are blocked there). They are resolved by the CI pin check on this PR and recorded in `deploy/argocd/kustomization.yaml`; CI verifies each one.
+- **Argo CD image digests** could not be read from this agent's sandbox (registry hosts are blocked there). The Argo CD and Dex digests were taken from the CI pin check's tag lookups on this PR; CI verifies all of them.
 - **Tested versions** in `docs/cluster.md`: `kind` and `kubectl` are the pinned ones above; the Docker Desktop version is filled in by the owner from the demo run.
 - **No new Python dependency.** Tests parse the YAML with regular expressions, like `test_agents.py`, rather than adding PyYAML.
