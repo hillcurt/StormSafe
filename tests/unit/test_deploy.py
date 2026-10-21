@@ -5,6 +5,7 @@ Registry checks (multi-arch, linux/arm64) and rendering need the network, so the
 """
 
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -170,3 +171,38 @@ def test_ci_validates_manifests_read_only() -> None:
     downloads = re.findall(r"https://github\.com/\S+/releases/download/\S+", wf)
     assert downloads, "install the CI tools from pinned releases"
     assert wf.count("sha256sum -c") >= len(downloads), "verify every downloaded tool"
+
+
+SECRETS_CHECK = ROOT / "scripts" / "check-rendered-secrets.sh"
+UPSTREAM_STUBS = "argocd-secret,argocd-notifications-secret"
+
+
+def run_secrets_check(tmp_path: Path, manifest: str, *args: str) -> int:
+    rendered = tmp_path / "rendered.yaml"
+    rendered.write_text(manifest)
+    cmd = ["bash", str(SECRETS_CHECK), *args, str(rendered)]
+    return subprocess.run(cmd, capture_output=True, check=False).returncode
+
+
+def secret(name: str, body: str = "") -> str:
+    return f"apiVersion: v1\nkind: Secret\nmetadata:\n  name: {name}\ntype: Opaque\n{body}"
+
+
+def test_rendered_secrets_check_allows_only_empty_upstream_stubs(tmp_path: Path) -> None:
+    """What gets applied, not just what is committed: no Secret values, no StormSafe Secrets."""
+    stubs = secret("argocd-secret") + "---\n" + secret("argocd-notifications-secret")
+    assert run_secrets_check(tmp_path, stubs, "--allow", UPSTREAM_STUBS) == 0
+    filled = secret("argocd-secret", "stringData:\n  admin.password: x\n")
+    assert run_secrets_check(tmp_path, filled, "--allow", UPSTREAM_STUBS) != 0
+    with_data = secret("argocd-secret", "data:\n  k: eA==\n")
+    assert run_secrets_check(tmp_path, with_data, "--allow", UPSTREAM_STUBS) != 0
+    assert run_secrets_check(tmp_path, secret("stormsafe-site")) != 0, "Argo CD syncs no Secrets"
+    namespace = "apiVersion: v1\nkind: Namespace\nmetadata:\n  name: stormsafe\n"
+    assert run_secrets_check(tmp_path, namespace) == 0
+
+
+def test_ci_checks_rendered_secrets() -> None:
+    wf = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
+    assert f"check-rendered-secrets.sh --allow {UPSTREAM_STUBS}" in wf, "Argo CD: stubs only"
+    synced = re.search(r"check-rendered-secrets\.sh (\S*deploy_overlays_local\S*)", wf)
+    assert synced, "check what Argo CD syncs, with nothing allowed"
