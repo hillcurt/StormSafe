@@ -174,11 +174,12 @@ def test_ci_validates_manifests_read_only() -> None:
     for step in ("kubectl kustomize", "kubeconform", "shellcheck", "check-image-pins.sh"):
         assert step in wf, f"ci.yml must run {step}"
     assert re.findall(r"^\s+\w[\w-]*: write", wf, re.MULTILINE) == [], "permissions stay read-only"
-    for action in re.findall(r"uses:\s*(azure/setup-kubectl@\S+)", wf):
-        assert re.search(r"@[0-9a-f]{40}$", action), f"pin {action} by commit"
-    downloads = re.findall(r"https://github\.com/\S+/releases/download/\S+", wf)
-    assert downloads, "install the CI tools from pinned releases"
-    assert wf.count("sha256sum -c") >= len(downloads), "verify every downloaded tool"
+    downloads = re.findall(r"curl -fsSLo \S+ (https://\S+)", wf)
+    assert len(downloads) >= 4, "install kubectl, kubeconform, shellcheck, crane from pinned URLs"
+    checks = wf.count("sha256sum -c") + wf.count("sha512sum -c")
+    assert checks >= len(downloads), "verify every downloaded tool"
+    job = wf.split("  manifests:", 1)[1]
+    assert re.search(r"permissions:\s*\n\s+contents: read", job), "the job declares read-only"
 
 
 SECRETS_CHECK = ROOT / "scripts" / "check-rendered-secrets.sh"

@@ -8,9 +8,11 @@ StormSafe runs on a local `kind` cluster with Argo CD, which pulls `deploy/overl
 | --- | --- | --- |
 | Docker Desktop | _filled in from the spec 0003 demo run_ | [docker.com](https://www.docker.com/products/docker-desktop/), running, Apple Silicon build |
 | `kind` | v0.33.0 | `brew install kind` (the node image in `deploy/cluster/kind-config.yaml` comes from this release) |
-| `kubectl` | v1.37.1 | `brew install kubectl` (within one minor version of the node's Kubernetes v1.37.0) |
+| `kubectl` | v1.37.0 | `brew install kubectl` (within one minor version of the node's Kubernetes v1.37.0) |
 
-Give Docker Desktop at least 4 GB of memory. Every pinned image is a multi-arch build with `linux/arm64`; CI checks this on every PR.
+Give Docker Desktop at least 4 GB of memory. Every pinned image is a multi-arch build with `linux/arm64`; CI checks this on every PR. When `public.ecr.aws` rate-limits CI, the redis image's manifest is read from Docker Hub by the same digest, so the first `cluster-up.sh` run is what proves the pull from ECR works.
+
+If `kind-config.yaml` pins a newer node image than the running cluster uses, `cluster-up.sh` warns and keeps the running cluster; rebuild with `cluster-down.sh` then `cluster-up.sh`.
 
 ## Bring up
 

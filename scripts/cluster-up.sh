@@ -22,10 +22,20 @@ for tool in docker kind kubectl; do
 done
 docker info >/dev/null 2>&1 || die "Docker is not running"
 
+[[ "$REVISION" =~ ^[A-Za-z0-9._/-]+$ ]] || die "STORMSAFE_REVISION must be a branch name, got '$REVISION'"
+
 kc() { kubectl --context "$CONTEXT" "$@"; }
 
 if kind get clusters 2>/dev/null | grep -qx "$CLUSTER"; then
   log "kind cluster '$CLUSTER' already exists"
+  want="$(sed -n 's/^ *image: *//p' "$ROOT/deploy/cluster/kind-config.yaml")"
+  have="$(docker inspect --format '{{.Config.Image}}' "${CLUSTER}-control-plane" 2>/dev/null || true)"
+  if [[ -n "$have" && "$have" != "$want" ]]; then
+    printf 'warning: the running node uses %s, but kind-config.yaml pins %s.
+' "$have" "$want" >&2
+    printf '         Run scripts/cluster-down.sh, then this script, to rebuild on the pinned image.
+' >&2
+  fi
 else
   log "creating kind cluster '$CLUSTER'"
   kind create cluster --name "$CLUSTER" --config "$ROOT/deploy/cluster/kind-config.yaml"

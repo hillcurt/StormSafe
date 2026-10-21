@@ -16,8 +16,8 @@ Every external reference is pinned: the `kind` node image and the Argo CD images
 | Argo CD (non-HA `install.yaml`) | v3.5.6, latest stable | commit `c2b1e3017e2cec86b122172e861dcd026453ae44` |
 | `quay.io/argoproj/argocd` | v3.5.6 | `sha256:8e5cc5bb008df8a09dba439462e58c94c55b7735888d3ebde0c25fc05e4e5335` |
 | `ghcr.io/dexidp/dex` | v2.45.1 (as shipped by Argo CD v3.5.6) | `sha256:8499afd690c437f52301efd2b05b2455da5bd2dfc20332cd697dc9937f808462` |
-| `public.ecr.aws/docker/library/redis` | 8.2.3-alpine (as shipped by Argo CD v3.5.6) | `sha256:08ad0b1d280850169a790dba1393ff7a90aef951fc19632cf4d3ce4f78e679ba` |
-| `kubectl` (CI, via `azure/setup-kubectl` v5.2.0 by commit) | v1.37.1 | — |
+| `public.ecr.aws/docker/library/redis` | 8.2.3-alpine (as shipped by Argo CD v3.5.6) | `sha256:08ad0b1d280850169a790dba1393ff7a90aef951fc19632cf4d3ce4f78e679ba` (index digest of `redis:8.2.3-alpine` from Docker Hub's tag API; Docker official images on `public.ecr.aws/docker/library` serve the same index. CI's tag lookup against ECR returned this digest; its manifest read fell back to Docker Hub when ECR rate-limited) |
+| `kubectl` (CI, `kubernetes-client-linux-amd64.tar.gz` from `dl.k8s.io`) | v1.37.0 | SHA-512 from the official `CHANGELOG-1.37.md` (changed after infra review: `azure/setup-kubectl` did not verify a checksum) |
 | `kubeconform` (CI) | v0.8.0 | SHA-256 checked |
 | `shellcheck` (CI) | v0.11.0 | SHA-256 checked |
 | `crane` (CI, digest checks) | v0.22.1 | SHA-256 checked |

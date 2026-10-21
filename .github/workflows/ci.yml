@@ -43,6 +43,8 @@ jobs:
   manifests:
     name: manifests, scripts, image pins
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     timeout-minutes: 10
     env:
       KUBERNETES_VERSION: 1.37.0
@@ -52,13 +54,13 @@ jobs:
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-      - uses: azure/setup-kubectl@bda439f5f36b99b262ebdcd3613869bddb064c8e # v5.2.0
-        with:
-          version: v1.37.1
-
       - name: Install pinned tools
         run: |
           mkdir -p "$RUNNER_TEMP/bin" && cd "$RUNNER_TEMP"
+          # kubectl v1.37.0; SHA-512 from the official CHANGELOG-1.37.md
+          curl -fsSLo kubectl.tar.gz https://dl.k8s.io/v1.37.0/kubernetes-client-linux-amd64.tar.gz
+          echo "ff61f94cf73281e24b8b7f16bd7ae15a928ef886399a2e8a360c170828babade73aeb284d37c596fc6c7dc68876b1550b714c1fc3ac4263adb8aef9e30a7c42f  kubectl.tar.gz" | sha512sum -c -
+          tar -xzf kubectl.tar.gz --strip-components=3 -C bin kubernetes/client/bin/kubectl
           curl -fsSLo kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz
           echo "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883  kubeconform.tar.gz" | sha256sum -c -
           tar -xzf kubeconform.tar.gz -C bin kubeconform
