@@ -26,9 +26,12 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] ADR 0007: deployment target (`kind` + Argo CD, pull-based GitOps, shadow mode only)
 - [x] Spec 0002 fix: earlier AI findings must be fixed or answered (REVIEW.md pass 8, PR template "Review findings")
 - [x] `CLAUDE.md`: agent may draft in-repo infra config in PRs; applying it to a cluster, Secrets, and credentials stay human-only
-- [ ] Spec 0003: local cluster bootstrap (spec, then implementation)
+- [x] Spec 0003: local cluster bootstrap — spec approved
+- [ ] Spec 0003: implementation (plan, tests, code)
 
 ## Later
+- Spec: throwaway `kind` cluster in CI that runs `cluster-up.sh` on PRs touching `deploy/`; first settle in `CLAUDE.md` whether a disposable CI cluster counts as "a live cluster" (human-only). Worth it once there's a real workload
+- Automated dependency update PRs (Renovate or Dependabot) for the commit- and digest-pinned actions and images
 - ADR 0003 amendment + spec: AI findings as inline review threads, with "Require conversation resolution before merging" on `trunk`, so every finding must be resolved (acknowledged, not agreed) before merge. Makes findings a merge gate, so the owner decides
 - `CLAUDE.md` rule: the agent may write workflows, but any new or widened `permissions:` is human-accepted. Lands with the container build spec, the first workflow with `packages: write` (from the reviewer on #12)
 - Spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention), per ADR 0006, before Phase 5
