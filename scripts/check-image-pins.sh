@@ -13,6 +13,9 @@ annotate() { [[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::$1::$2"; return 0; }
 fail() { echo "FAIL $1"; annotate error "$1"; failures=$((failures + 1)); }
 warn() { echo "WARN $1"; annotate warning "$1"; }
 
+errfile="$(mktemp)"
+trap 'rm -f "$errfile"' EXIT
+
 failures=0
 checked=0
 while read -r ref; do
@@ -35,15 +38,17 @@ while read -r ref; do
   # third try reads Docker official images (public.ecr.aws/docker/...) from Docker Hub, which
   # serves the same digest. For any other registry it is simply one more retry.
   for source in "$name" "$name" "${name/#public.ecr.aws\/docker\//docker.io/}"; do
-    if manifest="$(crane manifest "$source@$digest" 2>&1)"; then
+    # stdout is the manifest; stderr (errors, warnings) is kept apart so it never mixes in.
+    if manifest="$(crane manifest "$source@$digest" 2>"$errfile")"; then
       [[ "$source" != "$name" ]] && echo "note $name: read $digest from $source (same content address)"
       break
     fi
-    grep -q TOOMANYREQUESTS <<<"$manifest" || break
+    manifest=""
+    grep -q TOOMANYREQUESTS "$errfile" || break
     sleep 10
   done
   if ! jq -e . >/dev/null 2>&1 <<<"$manifest"; then
-    fail "$name:$tag: cannot fetch pinned digest $digest: $(tail -n 1 <<<"$manifest")"
+    fail "$name:$tag: cannot fetch pinned digest $digest: $(tail -n 1 "$errfile")"
     continue
   fi
   media="$(jq -r '.mediaType // empty' <<<"$manifest")"

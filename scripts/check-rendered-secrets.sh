@@ -22,14 +22,14 @@ awk -v allow="$allow" '
   BEGIN { n = split(allow, names, ","); for (i = 1; i <= n; i++) allowed[names[i]] = 1 }
   function finish() {
     if (kind == "Secret") {
-      where = FILENAME ": Secret/" (name == "" ? "<unnamed>" : name)
+      where = docfile ": Secret/" (name == "" ? "<unnamed>" : name)
       if (hasdata) { print "FAIL " where " has data or stringData"; bad++ }
       else if (!(name in allowed)) { print "FAIL " where " is not allowed here"; bad++ }
       else { print "ok   " where " (empty upstream stub, allowed)" }
     }
     kind = ""; name = ""; hasdata = 0; inmeta = 0
   }
-  FNR == 1 && NR != 1 { finish() }
+  FNR == 1 { if (NR != 1) finish(); docfile = FILENAME }
   /^---/ { finish(); next }
   /^kind:[ \t]*/ { kind = $2 }
   /^metadata:/ { inmeta = 1; next }
