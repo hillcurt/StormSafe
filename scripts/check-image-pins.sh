@@ -31,8 +31,8 @@ while read -r ref; do
     warn "$name:$tag now resolves to $current (pinned $digest)"
   fi
 
-  if ! manifest="$(crane manifest "$name@$digest" 2>/dev/null)"; then
-    fail "$name:$tag: pinned digest $digest not found in the registry"
+  if ! manifest="$(crane manifest "$name@$digest" 2>&1)"; then
+    fail "$name:$tag: cannot fetch pinned digest $digest: $(tail -n 1 <<<"$manifest")"
     continue
   fi
   media="$(jq -r '.mediaType // empty' <<<"$manifest")"
