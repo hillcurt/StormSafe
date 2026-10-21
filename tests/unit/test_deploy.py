@@ -63,7 +63,15 @@ def test_argocd_images_pinned_by_digest() -> None:
     for image in ARGOCD_IMAGES:
         assert image in pins, f"override {image} by digest"
         assert DIGEST.search(pins[image]), f"{image} needs a sha256 digest"
-    for bad in (":stable", ":latest", "/stable/", "/master/", "/main/", "newTag: stable"):
+    for bad in (
+        ":stable",
+        ":latest",
+        "/stable/",
+        "/master/",
+        "/main/",
+        "newTag: stable",
+        "newTag: latest",
+    ):
         assert bad not in text, f"no floating refs ({bad})"
 
 
