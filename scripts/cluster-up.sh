@@ -48,6 +48,7 @@ log "waiting for Argo CD"
 kc wait --for=condition=Established crd/applications.argoproj.io --timeout=120s
 kc -n argocd rollout status deployment/argocd-server --timeout=300s
 kc -n argocd rollout status deployment/argocd-repo-server --timeout=300s
+kc -n argocd rollout status deployment/argocd-redis --timeout=300s
 kc -n argocd rollout status statefulset/argocd-application-controller --timeout=300s
 
 log "applying the '$APP' Application"
