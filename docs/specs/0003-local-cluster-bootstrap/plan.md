@@ -1,7 +1,7 @@
 # Plan for spec 0003 — Local cluster bootstrap
 
 **Spec:** `docs/specs/0003-local-cluster-bootstrap/spec.md`
-**Status:** proposed
+**Status:** done
 
 ## Approach
 Plain Kustomize under `deploy/`, applied by two small Bash scripts the owner runs. `scripts/cluster-up.sh` creates a single-node `kind` cluster from `deploy/cluster/kind-config.yaml` if it is missing, installs Argo CD with a server-side apply of `deploy/argocd/` (Argo CD 3.x's CRDs are too large for client-side apply), waits for its CRDs and workloads, applies the `stormsafe` `Application`, and polls until it reports **Synced** and **Healthy**. Every step is declarative or guarded, so a second run changes nothing. Argo CD then pulls `deploy/overlays/local` from `trunk`, which renders `deploy/base/`: one `Namespace`.
