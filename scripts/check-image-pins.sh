@@ -8,14 +8,18 @@ set -euo pipefail
 command -v crane >/dev/null 2>&1 || { echo "error: crane is required" >&2; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo "error: jq is required" >&2; exit 1; }
 
+# In GitHub Actions, findings also become annotations on the PR.
+annotate() { [[ -n "${GITHUB_ACTIONS:-}" ]] && echo "::$1::$2"; return 0; }
+fail() { echo "FAIL $1"; annotate error "$1"; failures=$((failures + 1)); }
+warn() { echo "WARN $1"; annotate warning "$1"; }
+
 failures=0
 checked=0
 while read -r ref; do
   [[ -z "$ref" ]] && continue
   checked=$((checked + 1))
   if [[ ! "$ref" =~ ^([^@]+):([^:@/]+)@(sha256:[0-9a-f]{64})$ ]]; then
-    echo "FAIL $ref: expected name:tag@sha256:<digest>"
-    failures=$((failures + 1))
+    fail "$ref: expected name:tag@sha256:<digest>"
     continue
   fi
   name="${BASH_REMATCH[1]}"
@@ -24,20 +28,18 @@ while read -r ref; do
 
   current="$(crane digest "$name:$tag" 2>/dev/null || echo "unresolved")"
   if [[ "$current" != "$digest" ]]; then
-    echo "WARN $name:$tag now resolves to $current (pinned $digest)"
+    warn "$name:$tag now resolves to $current (pinned $digest)"
   fi
 
   if ! manifest="$(crane manifest "$name@$digest" 2>/dev/null)"; then
-    echo "FAIL $name:$tag: pinned digest $digest not found in the registry"
-    failures=$((failures + 1))
+    fail "$name:$tag: pinned digest $digest not found in the registry"
     continue
   fi
   media="$(jq -r '.mediaType // empty' <<<"$manifest")"
   case "$media" in
     application/vnd.oci.image.index.v1+json | application/vnd.docker.distribution.manifest.list.v2+json) ;;
     *)
-      echo "FAIL $name:$tag: $digest is not a multi-arch index ($media)"
-      failures=$((failures + 1))
+      fail "$name:$tag: $digest is not a multi-arch index ($media)"
       continue
       ;;
   esac
@@ -45,8 +47,7 @@ while read -r ref; do
     <<<"$manifest" >/dev/null; then
     echo "ok   $name:$tag@$digest (multi-arch, linux/arm64)"
   else
-    echo "FAIL $name:$tag: $digest has no linux/arm64 image"
-    failures=$((failures + 1))
+    fail "$name:$tag: $digest has no linux/arm64 image"
   fi
 done
 
