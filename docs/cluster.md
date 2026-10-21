@@ -46,7 +46,7 @@ This deletes the cluster and everything in it, including any Secrets created by 
 
 ## After a rebuild
 
-Nothing secret lives in git (ADR 0004, ADR 0007), so after `cluster-down.sh` and `cluster-up.sh`, recreate by hand:
+Nothing secret lives in git (ADR 0004, ADR 0007). The Argo CD install does create two empty Secrets, `argocd-secret` and `argocd-notifications-secret`, which Argo CD fills in itself; CI checks they stay empty in the pinned manifest and that nothing Argo CD syncs is a Secret. So after `cluster-down.sh` and `cluster-up.sh`, recreate by hand:
 
 1. **The Argo CD admin password.** A new one is generated; read it with the printed command.
 2. **The `stormsafe-site` Secret** (ADR 0004): the `STORMSAFE_SITE_*` values from your local `.env`, in the `stormsafe` namespace. Nothing reads it yet; the spec for the first workload that does adds the exact command here.

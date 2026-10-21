@@ -87,6 +87,15 @@ jobs:
             -schema-location "$K8S_SCHEMAS" -schema-location "$CRD_SCHEMAS" \
             "$RUNNER_TEMP"/rendered/*.yaml deploy/argocd/application.yaml
 
+      - name: No Secret values applied; no Secrets synced by Argo CD
+        run: |
+          # The Argo CD install ships two empty Secret stubs that it fills in at runtime.
+          scripts/check-rendered-secrets.sh --allow argocd-secret,argocd-notifications-secret \
+            "$RUNNER_TEMP/rendered/deploy_argocd.yaml"
+          # What Argo CD syncs from trunk: no Secrets at all (ADR 0004, ADR 0007).
+          scripts/check-rendered-secrets.sh \
+            "$RUNNER_TEMP/rendered/deploy_base.yaml" "$RUNNER_TEMP/rendered/deploy_overlays_local.yaml"
+
       - name: Lint scripts
         run: shellcheck scripts/*.sh
 

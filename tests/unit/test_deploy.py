@@ -204,5 +204,7 @@ def test_rendered_secrets_check_allows_only_empty_upstream_stubs(tmp_path: Path)
 def test_ci_checks_rendered_secrets() -> None:
     wf = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
     assert f"check-rendered-secrets.sh --allow {UPSTREAM_STUBS}" in wf, "Argo CD: stubs only"
-    synced = re.search(r"check-rendered-secrets\.sh (\S*deploy_overlays_local\S*)", wf)
+    synced = re.search(
+        r"check-rendered-secrets\.sh[\s\\]+(\S*deploy_base\S*)\s+(\S*deploy_overlays_local\S*)", wf
+    )
     assert synced, "check what Argo CD syncs, with nothing allowed"

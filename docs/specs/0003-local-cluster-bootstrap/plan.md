@@ -33,6 +33,7 @@ Every external reference is pinned: the `kind` node image and the Argo CD images
 | `deploy/base/kustomization.yaml`, `namespace.yaml` | Create | The `stormsafe` namespace only |
 | `deploy/overlays/local/kustomization.yaml` | Create | Local overlay; future home of the deployed digest (ADR 0007) |
 | `scripts/cluster-up.sh`, `scripts/cluster-down.sh` | Create | Idempotent bring-up; teardown |
+| `scripts/check-rendered-secrets.sh` | Create | CI helper: no Secret values in rendered manifests; only Argo CD's two empty upstream stubs allowed (added after AI review) |
 | `scripts/check-image-pins.sh` | Create | CI helper: each `name:tag@digest` must be a multi-arch index with `linux/arm64`; warns, with the current digest, when the tag has moved. Findings are also PR annotations. When `public.ecr.aws` rate-limits (it did on this PR), Docker official images are read from Docker Hub by the same digest |
 | `docs/cluster.md` | Create | Prerequisites and tested versions, bring-up, UI, teardown, post-rebuild steps |
 | `.claude/agents/infra-reviewer.md` | Create | Read-only persona (`Read`, `Grep`, `Glob`) |
@@ -47,7 +48,7 @@ Every external reference is pinned: the `kind` node image and the Argo CD images
 2. Argo CD manifest pinned to a commit SHA; every Argo CD image overridden by digest; no `stable`, `latest`, or branch refs → `test_argocd_manifest_pinned_to_commit`, `test_argocd_images_pinned_by_digest`
 3. Pinned digests are multi-arch with `linux/arm64` → CI step `scripts/check-image-pins.sh` (needs registry access, so not a unit test)
 4. `Application` targets this repo, `trunk`, `deploy/overlays/local`, automated sync with prune and self-heal → `test_application_targets_trunk_overlay`
-5. No `Secret` under `deploy/` → `test_no_secrets_under_deploy`; site guard from spec 0001 still runs
+5. No `Secret` under `deploy/` → `test_no_secrets_under_deploy` on the committed files; site guard from spec 0001 still runs. **Added after AI review:** the committed files are not all that gets applied, since the pinned Argo CD `install.yaml` ships two empty `Secret` stubs (`argocd-secret`, `argocd-notifications-secret`) that Argo CD needs and fills in at runtime. With the owner's agreement, the criterion means no Secret *values* in git and no Secrets synced by Argo CD. CI runs `scripts/check-rendered-secrets.sh` on the rendered output: any Secret with `data` or `stringData` fails; the Argo CD install allows only those two stubs; `deploy/base` and `deploy/overlays/local` (what Argo CD syncs) allow none → `test_rendered_secrets_check_allows_only_empty_upstream_stubs`, `test_ci_checks_rendered_secrets`
 6. Kustomizations render and validate, scripts pass `shellcheck` → CI `manifests` job; `test_ci_validates_manifests_read_only` checks the job exists, its tools are pinned and checksummed, and permissions stay read-only. `kubeconform` skips `CustomResourceDefinition` objects (the strict schema set has none; they come verbatim from the pinned Argo CD manifest)
 7. `cluster-up.sh` idempotent → owner verifies; `test_cluster_up_is_guarded` checks the create is guarded and applies are declarative
 8. `cluster-up.sh` never prints a secret → `test_cluster_up_prints_password_command_only`
