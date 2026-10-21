@@ -23,7 +23,7 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 6. Stage files by path; never `git add -A` or `git add .`. Commit no build artifacts, caches, or local data.
 7. If the spec is ambiguous or conflicts with an ADR, stop and ask. Do not guess on anything in "Human only" below.
 8. Review personas (ADR 0003) advise; they never approve or merge. Address their findings or explain in the PR why not.
-9. Before opening a PR that touches `deploy/`, `scripts/`, `.github/workflows/`, or a `Dockerfile`, run the `infra-reviewer` persona on the branch against `trunk`. Paste its review into a PR comment, and answer each finding in the PR's "Review findings" section ("fixed in <commit>" or "declined: <reason>"), as for the CI reviewer. Re-run it after changes to those files. Until a spec wires it into CI, this step is how it runs.
+9. Before opening a PR that touches `deploy/`, `scripts/`, `.github/workflows/`, or a `Dockerfile`, run the `infra-reviewer` persona on the branch against `trunk`. Paste its review into a PR comment, and answer each finding in the PR's "Review findings" section ("fixed in <commit>" or "declined: <reason>"), as for the CI reviewer. After changing those files, re-run it with the PR's earlier comments as input, until a run has no new blocking findings; new suggestions on that last run are answered, not re-run. Until a spec wires it into CI, this step is how it runs.
 
 ## Guardrails
 
