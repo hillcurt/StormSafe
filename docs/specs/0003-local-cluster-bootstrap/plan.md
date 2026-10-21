@@ -64,5 +64,5 @@ One PR. It is mostly YAML and two short scripts.
 ## Risks and open questions
 - **Demo before merge.** The `Application` tracks `trunk`, so before this PR merges Argo CD would find no `deploy/overlays/local` there. `cluster-up.sh` reads an optional `STORMSAFE_REVISION` (default `trunk`) and, only when it is set, patches the live `Application` to that branch. The committed file still says `trunk` (tested). The owner runs `STORMSAFE_REVISION=spec-0003-local-cluster-bootstrap scripts/cluster-up.sh` for the screenshot, then a plain run after merge moves it back to `trunk`.
 - **Argo CD image digests** could not be read from this agent's sandbox (registry hosts are blocked there). The Argo CD and Dex digests were taken from the CI pin check's tag lookups on this PR; CI verifies all of them.
-- **Tested versions** in `docs/cluster.md`: `kind` and `kubectl` are the pinned ones above; the Docker Desktop version is filled in by the owner from the demo run.
+- **Tested versions** in `docs/cluster.md`: `kind` and `kubectl` are the pinned ones above; Docker Desktop v4.96.1, from the owner.
 - **No new Python dependency.** Tests parse the YAML with regular expressions, like `test_agents.py`, rather than adding PyYAML.

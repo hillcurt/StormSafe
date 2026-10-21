@@ -28,7 +28,8 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] `CLAUDE.md`: agent may draft in-repo infra config in PRs; applying it to a cluster, Secrets, and credentials stay human-only
 - [x] Spec 0003: local cluster bootstrap — spec approved
 - [x] Spec 0003: implementation (plan, tests, code) — owner runs the demo (`scripts/cluster-up.sh`, screenshot on the PR)
-- [ ] Spec 0003: owner's demo screenshot on the implementation PR; tested Docker Desktop version in `docs/cluster.md`; spec status → `done`
+- [x] Spec 0003: tested Docker Desktop version in `docs/cluster.md` (v4.96.1)
+- [ ] Spec 0003: owner's demo screenshot on the implementation PR; spec status → `done`
 - [ ] Next spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention, ADR 0006) or Phase 2's data and artifact versioning ADR — owner picks
 
 ## Later

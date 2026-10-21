@@ -6,7 +6,7 @@ StormSafe runs on a local `kind` cluster with Argo CD, which pulls `deploy/overl
 
 | Tool | Tested version | Install |
 | --- | --- | --- |
-| Docker Desktop | _filled in from the spec 0003 demo run_ | [docker.com](https://www.docker.com/products/docker-desktop/), running, Apple Silicon build |
+| Docker Desktop | v4.96.1 | [docker.com](https://www.docker.com/products/docker-desktop/), running, Apple Silicon build |
 | `kind` | v0.33.0 | `brew install kind` (the node image in `deploy/cluster/kind-config.yaml` comes from this release) |
 | `kubectl` | v1.37.0 | `brew install kubectl` (within one minor version of the node's Kubernetes v1.37.0) |
 
