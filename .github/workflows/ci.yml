@@ -39,3 +39,69 @@ jobs:
 
       - name: Tests
         run: uv run pytest
+
+  manifests:
+    name: manifests, scripts, image pins
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    env:
+      KUBERNETES_VERSION: 1.37.0
+      # Schema sources pinned by commit (spec 0003 plan).
+      K8S_SCHEMAS: https://raw.githubusercontent.com/yannh/kubernetes-json-schema/93153a1458e24e93f386c50f9980d584fcba574b/{{.NormalizedKubernetesVersion}}-standalone{{.StrictSuffix}}/{{.ResourceKind}}{{.KindSuffix}}.json
+      CRD_SCHEMAS: https://raw.githubusercontent.com/datreeio/CRDs-catalog/501527ab9c40c827144c8f45945b25a023e344ce/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Install pinned tools
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin" && cd "$RUNNER_TEMP"
+          # kubectl v1.37.0; SHA-512 from the official CHANGELOG-1.37.md
+          curl -fsSLo kubectl.tar.gz https://dl.k8s.io/v1.37.0/kubernetes-client-linux-amd64.tar.gz
+          echo "ff61f94cf73281e24b8b7f16bd7ae15a928ef886399a2e8a360c170828babade73aeb284d37c596fc6c7dc68876b1550b714c1fc3ac4263adb8aef9e30a7c42f  kubectl.tar.gz" | sha512sum -c -
+          tar -xzf kubectl.tar.gz --strip-components=3 -C bin kubernetes/client/bin/kubectl
+          curl -fsSLo kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz
+          echo "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883  kubeconform.tar.gz" | sha256sum -c -
+          tar -xzf kubeconform.tar.gz -C bin kubeconform
+          curl -fsSLo shellcheck.tar.xz https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.linux.x86_64.tar.xz
+          echo "8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198  shellcheck.tar.xz" | sha256sum -c -
+          tar -xJf shellcheck.tar.xz --strip-components=1 -C bin shellcheck-v0.11.0/shellcheck
+          curl -fsSLo crane.tar.gz https://github.com/google/go-containerregistry/releases/download/v0.22.1/go-containerregistry_Linux_x86_64.tar.gz
+          echo "0ab7a1d6932a213aed964ce97666c3077fe691c8606413674a8b3e0b9ec4cda0  crane.tar.gz" | sha256sum -c -
+          tar -xzf crane.tar.gz -C bin crane
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Render and validate every kustomization
+        run: |
+          mkdir -p "$RUNNER_TEMP/rendered"
+          find deploy -name kustomization.yaml -print0 | while IFS= read -r -d '' file; do
+            dir="$(dirname "$file")"
+            out="$RUNNER_TEMP/rendered/$(echo "$dir" | tr / _).yaml"
+            echo "::group::kubectl kustomize $dir"
+            kubectl kustomize "$dir" > "$out"
+            echo "::endgroup::"
+          done
+          # CRDs come verbatim from the pinned Argo CD manifest; the strict schema set has no
+          # CustomResourceDefinition schema, so they are skipped. Everything else is strict.
+          kubeconform -strict -summary -skip CustomResourceDefinition \
+            -kubernetes-version "$KUBERNETES_VERSION" \
+            -schema-location "$K8S_SCHEMAS" -schema-location "$CRD_SCHEMAS" \
+            "$RUNNER_TEMP"/rendered/*.yaml deploy/argocd/application.yaml
+
+      - name: No Secret values applied; no Secrets synced by Argo CD
+        run: |
+          # The Argo CD install ships two empty Secret stubs that it fills in at runtime.
+          scripts/check-rendered-secrets.sh --allow argocd-secret,argocd-notifications-secret \
+            "$RUNNER_TEMP/rendered/deploy_argocd.yaml"
+          # What Argo CD syncs from trunk: no Secrets at all (ADR 0004, ADR 0007).
+          scripts/check-rendered-secrets.sh \
+            "$RUNNER_TEMP/rendered/deploy_base.yaml" "$RUNNER_TEMP/rendered/deploy_overlays_local.yaml"
+
+      - name: Lint scripts
+        run: shellcheck scripts/*.sh
+
+      - name: Pinned images are multi-arch with linux/arm64
+        run: |
+          grep -hoE '^[ -]*image: \S+' "$RUNNER_TEMP"/rendered/*.yaml deploy/cluster/kind-config.yaml \
+            | awk '{print $NF}' | sort -u | scripts/check-image-pins.sh
