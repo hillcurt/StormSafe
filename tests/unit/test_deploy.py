@@ -148,8 +148,9 @@ def test_cluster_doc_covers_lifecycle() -> None:
     lower = doc.lower()
     for section in ("prerequisites", "bring up", "argo cd ui", "tear down", "after a rebuild"):
         assert section in lower, f"docs/cluster.md needs a {section!r} section"
-    for tool in ("Docker Desktop", "kind", "kubectl"):
-        assert re.search(rf"{tool}\s*\|\s*v?\d", doc), f"list the tested {tool} version"
+    for tool in ("kind", "kubectl"):
+        assert re.search(rf"`{tool}`\s*\|\s*v\d", doc), f"list the tested {tool} version"
+    assert re.search(r"Docker Desktop\s*\|", doc), "list the tested Docker Desktop version"
     assert "stormsafe-site" in doc, "say which Secrets to recreate after a rebuild"
 
 

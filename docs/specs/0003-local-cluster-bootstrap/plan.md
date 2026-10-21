@@ -48,10 +48,11 @@ Every external reference is pinned: the `kind` node image and the Argo CD images
 3. Pinned digests are multi-arch with `linux/arm64` → CI step `scripts/check-image-pins.sh` (needs registry access, so not a unit test)
 4. `Application` targets this repo, `trunk`, `deploy/overlays/local`, automated sync with prune and self-heal → `test_application_targets_trunk_overlay`
 5. No `Secret` under `deploy/` → `test_no_secrets_under_deploy`; site guard from spec 0001 still runs
-6. Kustomizations render and validate, scripts pass `shellcheck` → CI `manifests` job
+6. Kustomizations render and validate, scripts pass `shellcheck` → CI `manifests` job; `test_ci_validates_manifests_read_only` checks the job exists, its tools are pinned and checksummed, and permissions stay read-only. `kubeconform` skips `CustomResourceDefinition` objects (the strict schema set has none; they come verbatim from the pinned Argo CD manifest)
 7. `cluster-up.sh` idempotent → owner verifies; `test_cluster_up_is_guarded` checks the create is guarded and applies are declarative
 8. `cluster-up.sh` never prints a secret → `test_cluster_up_prints_password_command_only`
 9. Demo → owner runs it and attaches a screenshot
+- Base holds only the namespace → `test_base_is_the_namespace_only`
 10. `infra-reviewer` read-only → `test_infra_reviewer_is_read_only`
 11. `docs/cluster.md` sections and versions → `test_cluster_doc_covers_lifecycle`
 12. `CLAUDE.md` names the digest file → `test_claude_md_names_digest_file`
