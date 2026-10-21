@@ -30,6 +30,8 @@ STORMSAFE_REVISION=<branch> scripts/cluster-up.sh
 
 The repo still says `trunk`. Run `scripts/cluster-up.sh` again without the variable to go back.
 
+The script applies with `--server-side --force-conflicts`, so it takes back any field changed by hand on the Argo CD install or the `stormsafe` Application. Change those in the repo, not in the cluster.
+
 ## Open the Argo CD UI
 
 ```bash

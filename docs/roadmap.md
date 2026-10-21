@@ -34,7 +34,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 ## Later
 - Dedicated Argo CD `AppProject` for `stormsafe`: source limited to this repo, destination to the `stormsafe` namespace, no cluster-scoped kinds (least privilege with prune and self-heal; from the infra review on #15). Before the first real workload
 - Spec: throwaway `kind` cluster in CI that runs `cluster-up.sh` on PRs touching `deploy/`; first settle in `CLAUDE.md` whether a disposable CI cluster counts as "a live cluster" (human-only). Worth it once there's a real workload
-- Automated dependency update PRs (Renovate or Dependabot) for the commit- and digest-pinned actions and images
+- Automated dependency update PRs (Renovate or Dependabot) for the commit- and digest-pinned actions and images; also pin the CI runner image or the tools it supplies (`jq`, used by the image pin check)
 - ADR 0003 amendment + spec: AI findings as inline review threads, with "Require conversation resolution before merging" on `trunk`, so every finding must be resolved (acknowledged, not agreed) before merge. Makes findings a merge gate, so the owner decides
 - `CLAUDE.md` rule: the agent may write workflows, but any new or widened `permissions:` is human-accepted. Lands with the container build spec, the first workflow with `packages: write` (from the reviewer on #12)
 - Spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention), per ADR 0006, before Phase 5

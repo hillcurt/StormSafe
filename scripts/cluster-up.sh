@@ -30,7 +30,8 @@ if kind get clusters 2>/dev/null | grep -qx "$CLUSTER"; then
   log "kind cluster '$CLUSTER' already exists"
   want="$(sed -n 's/^ *image: *//p' "$ROOT/deploy/cluster/kind-config.yaml")"
   have="$(docker inspect --format '{{.Config.Image}}' "${CLUSTER}-control-plane" 2>/dev/null || true)"
-  if [[ -n "$have" && "$have" != "$want" ]]; then
+  # Compare digests only: how the container records its image ref may differ from the config.
+  if [[ "$have" == *@sha256:* && "${have##*@}" != "${want##*@}" ]]; then
     printf 'warning: the running node uses %s, but kind-config.yaml pins %s.
 ' "$have" "$want" >&2
     printf '         Run scripts/cluster-down.sh, then this script, to rebuild on the pinned image.
