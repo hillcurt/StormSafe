@@ -31,13 +31,15 @@ while read -r ref; do
     warn "$name:$tag now resolves to $current (pinned $digest)"
   fi
 
-  # Anonymous pulls can be rate limited (public.ecr.aws answers TOOMANYREQUESTS); retry a few times.
-  for attempt in 1 2 3 4; do
-    if manifest="$(crane manifest "$name@$digest" 2>&1)"; then
+  # Anonymous pulls can be rate limited (public.ecr.aws answers TOOMANYREQUESTS). Retry once,
+  # then read Docker official images from Docker Hub, which serves the same digest.
+  for source in "$name" "$name" "${name/#public.ecr.aws\/docker\//docker.io/}"; do
+    if manifest="$(crane manifest "$source@$digest" 2>&1)"; then
+      [[ "$source" != "$name" ]] && echo "note $name: read $digest from $source (same content address)"
       break
     fi
     grep -q TOOMANYREQUESTS <<<"$manifest" || break
-    if (( attempt < 4 )); then sleep $((attempt * 15)); fi
+    sleep 10
   done
   if ! jq -e . >/dev/null 2>&1 <<<"$manifest"; then
     fail "$name:$tag: cannot fetch pinned digest $digest: $(tail -n 1 <<<"$manifest")"
