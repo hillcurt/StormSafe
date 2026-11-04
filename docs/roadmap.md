@@ -30,7 +30,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] Spec 0003: implementation (plan, tests, code)
 - [x] Spec 0003: tested Docker Desktop version in `docs/cluster.md` (v4.96.1)
 - [x] Spec 0003: owner's demo, Synced and Healthy (recorded on the PR; screenshot waived); spec status → `done`
-- [ ] Spec 0003: owner re-runs `cluster-up.sh` twice on the fixed script; the second run leaves the Application unchanged (the first second-run exposed an apply-then-patch flip)
+- [x] Spec 0003: owner re-ran `cluster-up.sh` on the fixed script; the Application's generation stayed the same (the first second-run had exposed an apply-then-patch flip)
 - [ ] Next spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention, ADR 0006) or Phase 2's data and artifact versioning ADR — owner picks
 
 ## Later
