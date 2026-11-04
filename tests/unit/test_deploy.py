@@ -226,7 +226,9 @@ def test_cluster_up_applies_the_application_once() -> None:
     assert script.count("kc apply") == 2, "one apply for Argo CD, one for the Application"
     sub = re.search(r'sed "([^"]+)" "\$ROOT/deploy/argocd/application\.yaml"', script)
     assert sub, "build the Application manifest from application.yaml with sed"
-    assert "die" in script.split(sub.group(0), 1)[1].split("kc apply", 1)[0], "fail if sed missed"
+    guard = script.split(sub.group(0), 1)[1].split("kc apply", 1)[0]
+    assert "die" in guard, "fail if sed missed"
+    assert "grep" not in guard and '== "$REVISION"' in guard, "exact match, not a regex"
     # Run the script's own substitution on the committed file.
     for revision in ("trunk", "spec-0003-local-cluster-bootstrap"):
         expr = sub.group(1).replace("\\$", "$").replace("$REVISION", revision)
