@@ -217,3 +217,12 @@ def test_ci_checks_rendered_secrets() -> None:
         r"check-rendered-secrets\.sh[\s\\]+(\S*deploy_base\S*)\s+(\S*deploy_overlays_local\S*)", wf
     )
     assert synced, "check what Argo CD syncs, with nothing allowed"
+
+
+def test_cluster_up_applies_the_application_once() -> None:
+    """A demo run must not flip the live Application to trunk and back (apply, then patch)."""
+    script = CLUSTER_UP.read_text()
+    assert "patch application" not in script, "set the revision in the one apply, not a patch"
+    applies = [line for line in script.splitlines() if "application.yaml" in line]
+    assert len(applies) == 1, "apply application.yaml exactly once"
+    assert "targetRevision" in applies[0] and "$REVISION" in applies[0]
