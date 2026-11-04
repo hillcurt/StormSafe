@@ -5,6 +5,7 @@
 #
 # Optional: STORMSAFE_REVISION=<branch> points the live Application at a branch instead of
 # trunk, for a demo before that branch merges. Run again without it to go back to trunk.
+# A re-run with the same value leaves the Application unchanged.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -53,12 +54,12 @@ kc -n argocd rollout status deployment/argocd-redis --timeout=300s
 kc -n argocd rollout status statefulset/argocd-application-controller --timeout=300s
 
 log "applying the '$APP' Application"
-kc apply --server-side --force-conflicts -f "$ROOT/deploy/argocd/application.yaml"
 if [[ "$REVISION" != "trunk" ]]; then
-  log "pointing the live Application at '$REVISION' (demo only; the repo still says trunk)"
-  kc -n argocd patch application "$APP" --type merge \
-    -p "{\"spec\":{\"source\":{\"targetRevision\":\"$REVISION\"}}}"
+  log "targeting '$REVISION' (demo only; the repo still says trunk)"
 fi
+# One apply at the requested revision, so a re-run never points the live Application at trunk
+# and back. $REVISION is validated above, so it is safe in the sed expression.
+sed "s|^\( *targetRevision:\) trunk\$|\1 $REVISION|" "$ROOT/deploy/argocd/application.yaml" | kc apply --server-side --force-conflicts -f -
 
 log "waiting for '$APP' to be Synced and Healthy"
 deadline=$((SECONDS + TIMEOUT_SECONDS))
