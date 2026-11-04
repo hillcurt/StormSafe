@@ -1,6 +1,6 @@
 # Spec 0003 — Local cluster bootstrap
 
-**Status:** approved
+**Status:** done
 **Phase:** 0
 
 ## Goal

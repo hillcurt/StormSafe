@@ -1,0 +1,6 @@
+# Local kind cluster overlay; Argo CD syncs this path from trunk (ADR 0007).
+# When images exist, the deployed image digest is set here by a release PR (human-only, CLAUDE.md).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base

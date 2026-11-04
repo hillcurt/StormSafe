@@ -1,0 +1,20 @@
+# The stormsafe Application (ADR 0007): Argo CD pulls deploy/overlays/local from trunk and
+# keeps the cluster matching it. Applied by scripts/cluster-up.sh after Argo CD is running.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stormsafe
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/hillcurt/StormSafe.git
+    targetRevision: trunk
+    path: deploy/overlays/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stormsafe
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
