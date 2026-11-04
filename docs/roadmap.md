@@ -31,10 +31,12 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] Spec 0003: tested Docker Desktop version in `docs/cluster.md` (v4.96.1)
 - [x] Spec 0003: owner's demo, Synced and Healthy (recorded on the PR; screenshot waived); spec status → `done`
 - [x] Spec 0003: owner re-ran `cluster-up.sh` on the fixed script; the Application's generation stayed the same (the first second-run had exposed an apply-then-patch flip)
+- [x] `CLAUDE.md`: the agent runs `infra-reviewer` locally before opening infra PRs and answers its findings in the PR
 - [ ] Next spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention, ADR 0006) or Phase 2's data and artifact versioning ADR — owner picks
 
 ## Later
 - Dedicated Argo CD `AppProject` for `stormsafe`: source limited to this repo, destination to the `stormsafe` namespace, no cluster-scoped kinds (least privilege with prune and self-heal; from the infra review on #15). Before the first real workload
+- `infra-reviewer` follows `REVIEW.md` like `reviewer`: reads earlier comments, treats unanswered findings as blocking (pass 8); a test keeps both personas pointed at `REVIEW.md`. Before wiring it into `ai-review.yml`
 - Spec: throwaway `kind` cluster in CI that runs `cluster-up.sh` on PRs touching `deploy/`; first settle in `CLAUDE.md` whether a disposable CI cluster counts as "a live cluster" (human-only). Worth it once there's a real workload
 - Automated dependency update PRs (Renovate or Dependabot) for the commit- and digest-pinned actions and images; also pin the CI runner image or the tools it supplies (`jq`, used by the image pin check)
 - ADR 0003 amendment + spec: AI findings as inline review threads, with "Require conversation resolution before merging" on `trunk`, so every finding must be resolved (acknowledged, not agreed) before merge. Makes findings a merge gate, so the owner decides
