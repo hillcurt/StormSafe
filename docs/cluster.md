@@ -28,7 +28,7 @@ To demo a branch before it merges, point the live Application at that branch:
 STORMSAFE_REVISION=<branch> scripts/cluster-up.sh
 ```
 
-The repo still says `trunk`. Run `scripts/cluster-up.sh` again without the variable to go back.
+The repo still says `trunk`. Re-running with the same value leaves the Application unchanged. Running without the variable applies the committed `trunk`, which is how you switch back.
 
 The script applies with `--server-side --force-conflicts`, so it takes back any field changed by hand on the Argo CD install or the `stormsafe` Application. Change those in the repo, not in the cluster.
 

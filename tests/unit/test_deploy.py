@@ -223,6 +223,14 @@ def test_cluster_up_applies_the_application_once() -> None:
     """A demo run must not flip the live Application to trunk and back (apply, then patch)."""
     script = CLUSTER_UP.read_text()
     assert "patch application" not in script, "set the revision in the one apply, not a patch"
-    applies = [line for line in script.splitlines() if "application.yaml" in line]
-    assert len(applies) == 1, "apply application.yaml exactly once"
-    assert "targetRevision" in applies[0] and "$REVISION" in applies[0]
+    assert script.count("kc apply") == 2, "one apply for Argo CD, one for the Application"
+    sub = re.search(r'sed "([^"]+)" "\$ROOT/deploy/argocd/application\.yaml"', script)
+    assert sub, "build the Application manifest from application.yaml with sed"
+    assert "die" in script.split(sub.group(0), 1)[1].split("kc apply", 1)[0], "fail if sed missed"
+    # Run the script's own substitution on the committed file.
+    for revision in ("trunk", "spec-0003-local-cluster-bootstrap"):
+        expr = sub.group(1).replace("\\$", "$").replace("$REVISION", revision)
+        out = subprocess.run(
+            ["sed", expr, str(ARGOCD / "application.yaml")], capture_output=True, text=True
+        ).stdout
+        assert re.search(rf"^\s*targetRevision: {re.escape(revision)}$", out, re.MULTILINE)

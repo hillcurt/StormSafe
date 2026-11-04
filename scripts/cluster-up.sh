@@ -59,7 +59,10 @@ if [[ "$REVISION" != "trunk" ]]; then
 fi
 # One apply at the requested revision, so a re-run never points the live Application at trunk
 # and back. $REVISION is validated above, so it is safe in the sed expression.
-sed "s|^\( *targetRevision:\) trunk\$|\1 $REVISION|" "$ROOT/deploy/argocd/application.yaml" | kc apply --server-side --force-conflicts -f -
+manifest="$(sed "s|^\( *targetRevision:\) trunk\$|\1 $REVISION|" "$ROOT/deploy/argocd/application.yaml")"
+grep -Eq "^ *targetRevision: ${REVISION}\$" <<<"$manifest" \
+  || die "could not set targetRevision to '$REVISION' in deploy/argocd/application.yaml"
+kc apply --server-side --force-conflicts -f - <<<"$manifest"
 
 log "waiting for '$APP' to be Synced and Healthy"
 deadline=$((SECONDS + TIMEOUT_SECONDS))
