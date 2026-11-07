@@ -34,8 +34,10 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] `CLAUDE.md`: the agent runs `infra-reviewer` locally before opening infra PRs and answers its findings in the PR
 - [x] Owner picked Phase 2 first; the container build spec waits until before Phase 5
 - [x] ADR 0008: data and artifact versioning (private S3 bucket: DVC remote + MLflow artifact root; credentials human-only)
-- [ ] Owner: create the bucket, the two IAM identities, and the $5 budget alert per ADR 0008 (human-only)
-- [ ] Next spec: DVC and artifact store wiring per ADR 0008 (`dvc init`, remote via `.dvc/config.local`, settings keys, a guard that no bucket name or credentials are committed)
+- [x] ADR 0009: cloud infrastructure as code (Terraform under `infra/aws/`, bootstrap + main stacks, S3 backend with native locking; plan/apply human-only); `CLAUDE.md` guardrail row for `infra/`
+- [ ] Next spec: AWS infra as code per ADR 0008 and ADR 0009 (bootstrap state bucket, data bucket, IAM, budget; `fmt`/`validate` in `ci.yml`)
+- [ ] Owner: create the IAM Identity Center admin identity, apply both stacks, create the cluster user's access key (human-only)
+- [ ] Then spec: DVC and artifact store wiring per ADR 0008 (`dvc init`, remote via `.dvc/config.local`, settings keys, a guard that no bucket name or credentials are committed)
 
 ## Later
 - Dedicated Argo CD `AppProject` for `stormsafe`: source limited to this repo, destination to the `stormsafe` namespace, no cluster-scoped kinds (least privilege with prune and self-heal; from the infra review on #15). Before the first real workload
@@ -46,6 +48,7 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - `CLAUDE.md` rule: the agent may write workflows, but any new or widened `permissions:` is human-accepted. Lands with the container build spec, the first workflow with `packages: write` (from the reviewer on #12)
 - Spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention), per ADR 0006, before Phase 5
 - ADR + spec: Claude Code hooks for rules that must always hold (no `git add -A`, no site values, no test edits during bug fixes, `plan.md` kept current)
+- `infra-reviewer` covers `infra/` Terraform: pinned provider and lock file, no secrets in state, least-privilege IAM, `prevent_destroy` on both buckets, no private values. Before the AWS infra spec's implementation PR
 - ADR: where the MLflow tracking server and registry run (ADR 0004 keeps tracking local; serving in the cluster needs a reachable registry, ADR 0006). Before the Phase 3 training spec (from ADR 0008)
 - Phase 2: evals for agent personas (seeded PRs the reviewer must catch), run when agent config changes
 - Phase 6: monitoring breaches generate `intent.md`; escalation bands 1σ / 2σ / 3σ
