@@ -33,7 +33,8 @@ The store must be reachable from the owner's machine and from pods in the `kind`
 - Cost at this volume is cents per month (S3 Standard is about $0.023 per GB-month). AWS has no hard spend cap, so the budget alert is the guard.
 - The data sits on a third party's infrastructure. It is private, encrypted at rest, and readable only by the two identities above, plus the owner's admin identity that runs Terraform.
 - A fresh clone without credentials can't `dvc pull`. Results stay reproducible for the owner, as ADR 0004 already accepts.
-- **Open:** ADR 0004 keeps MLflow tracking local, but serving in the cluster needs a reachable registry (ADR 0006). Where the tracking server and registry run gets its own ADR before the Phase 3 training spec.
+- ADR 0004 is narrowed in this change: its "MLflow stays local" now covers tracking metadata only, and artifacts live here.
+- **Open:** tracking metadata stays local for now, but serving in the cluster needs a reachable registry (ADR 0006). Where the tracking server and registry run gets its own ADR before the Phase 3 training spec.
 
 ## Alternatives considered
 - **Cloudflare R2:** S3-compatible, so DVC and MLflow work against it through an endpoint URL. It has a 10 GB free tier and no egress fees. It is the close second. At this volume, egress doesn't matter and both cost about nothing. S3 with IAM roles and GitHub OIDC is the pattern ML platform teams use most, which this project is meant to show.
@@ -43,3 +44,7 @@ The store must be reachable from the owner's machine and from pods in the `kind`
 - **Google Cloud Storage or Backblaze B2:** comparable, with no advantage for this project.
 - **S3 object versioning alone, without DVC:** keeps old bytes, but no git commit points at the exact dataset a run used.
 - **lakeFS instead of DVC:** built for data lakes far larger than this, and a server to run. DVC is file-level, git-native, and fits one owner. lakeFS took over stewardship of DVC in November 2025, which lowers the maintenance risk.
+
+## References
+- MinIO community edition status: [It's FOSS, "MinIO moves away from open source"](https://itsfoss.com/news/minio-moves-away-from-open-source/) (maintenance mode December 2025; repo archived February and April 2026)
+- DVC stewardship: [lakeFS acquires DVC](https://lakefs.io/blog/lakefs-acquires-dvc/) (November 18, 2025); [DVC FAQ](https://dvc.org/blog/dvc-joins-lakefs-your-questions-answered/)
