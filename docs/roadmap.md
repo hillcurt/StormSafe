@@ -34,9 +34,9 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] `CLAUDE.md`: the agent runs `infra-reviewer` locally before opening infra PRs and answers its findings in the PR
 - [x] Owner picked Phase 2 first; the container build spec waits until before Phase 5
 - [x] ADR 0008: data and artifact versioning (private S3 bucket: DVC remote + MLflow artifact root; credentials human-only)
-- [x] ADR 0009: cloud infrastructure as code (Terraform under `infra/aws/`, bootstrap + main stacks, S3 backend with native locking; plan/apply human-only); `CLAUDE.md` guardrail row for `infra/`
-- [ ] Next spec: AWS infra as code per ADR 0008 and ADR 0009 (bootstrap state bucket, data bucket, IAM, budget; `fmt`/`validate` in `ci.yml`)
-- [ ] Owner: create the IAM Identity Center admin identity, apply both stacks, create the cluster user's access key (human-only)
+- [x] ADR 0009: cloud infrastructure as code (Terraform under `infra/aws/`; `infra.yml` plans on PRs and applies on `trunk` after approval in the `aws` environment, via GitHub OIDC; bootstrap stack applied locally); `CLAUDE.md` guardrail row for `infra/` and `infra.yml`; `infra.yml` in `docs/sdlc.md`
+- [ ] Next spec: AWS infra as code per ADR 0008 and ADR 0009 (bootstrap stack: state bucket, OIDC provider, plan/apply roles; main stack: data bucket, IAM, budget; `infra.yml`)
+- [ ] Owner: create the IAM Identity Center admin identity; apply the bootstrap stack locally; create the `aws` environment with yourself as required reviewer and the Actions secrets; approve the first apply; create the cluster user's access key (human-only)
 - [ ] Then spec: DVC and artifact store wiring per ADR 0008 (`dvc init`, remote via `.dvc/config.local`, settings keys, a guard that no bucket name or credentials are committed)
 
 ## Later

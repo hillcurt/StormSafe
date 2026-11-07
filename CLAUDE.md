@@ -38,7 +38,7 @@ A decision made in conversation is not real until it is in an ADR, a spec, or th
 | `.claude/agents/` personas (ADR 0003) | Draft when asked | Accept; change a persona's tools or permissions |
 | Site location: latitude, longitude, time zone (ADR 0004) | Never write it into the repo, PRs, commit messages, or logs | Set it in local `.env` and the cluster Secret |
 | Infra config in the repo: `deploy/` manifests, the `kind` cluster config, bootstrap scripts, `Dockerfile` | Write them in a PR | Accept; change the deployed image digest in `deploy/overlays/local/kustomization.yaml` (a release, ADR 0007). Other fields in that file are agent-editable |
-| Cloud infra as code: Terraform under `infra/` (ADR 0009) | Write it in a PR; run `fmt` and `validate` | Accept; `terraform plan`, `apply`, `import`, and any state operation; the private `*.tfvars` and `backend.hcl` |
+| Cloud infra as code: Terraform under `infra/`, and `.github/workflows/infra.yml` (ADR 0009) | Write them in a PR; run `fmt` and `validate` locally | Accept; any IAM trust policy, workflow-role permission, or new or widened workflow `permissions:`; approving the `aws` environment (the apply); applying `infra/aws/bootstrap/`; `import` and any state operation; the GitHub secrets and private `*.tfvars` / `backend.hcl` |
 | Running anything against a live cluster: those bootstrap scripts, `kind create`, `kubectl apply`, Argo CD syncs and rollbacks | Nothing | All |
 | Secrets, cloud credentials | Nothing | All |
 
