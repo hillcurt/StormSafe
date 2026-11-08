@@ -2,6 +2,7 @@
 
 **Status:** accepted
 **Date:** 2026-11-08
+**Amended:** 2026-11-08, with Spec 0004: the laptop reaches the store through `kubectl port-forward` instead of a host port mapping
 
 ## Context
 Phase 2 builds training sets from GOES-19 GLM lightning and weather data. Phase 3 logs models to MLflow, and Phase 5 serving loads the registered model at startup (ADR 0006). The governance rule in `docs/sdlc.md` asks for versioned data snapshots, and Gate 2 asks for a pull that resumes after interruption. Every dataset and model has to trace back to the code and data that made it.
@@ -15,7 +16,7 @@ The project has no cloud budget. ADR 0007 already runs everything on the owner's
 - **The data outlives the cluster.**
   - Garage's data and metadata live in a folder on the host, outside the repo, mounted into the node with `kind`'s `extraMounts`. The folder's path is set in local config, not committed.
   - `cluster-down.sh` deletes the cluster, not that folder.
-- **Reachable from the laptop only.** Garage's S3 port is mapped to `127.0.0.1` with `extraPortMappings`, so DVC and MLflow on the laptop reach it and nothing else on the network can. ADR 0007's "no exposed endpoints" still holds.
+- **Reachable from the laptop only, on demand.** Pods reach Garage through its in-cluster Service. The laptop reaches the S3 API through `kubectl port-forward`, bound to `127.0.0.1`, opened by a wrapper script only while a command needs it. No host port is mapped, so nothing listens when no forward is running, and ADR 0007's "no exposed endpoints" holds. Spec 0003's no-host-ports rule stays as it is.
 - **Two buckets:**
   - `dvc`: the DVC remote.
   - `mlflow`: the MLflow artifact root.
@@ -35,8 +36,9 @@ The project has no cloud budget. ADR 0007 already runs everything on the owner's
 - The storage layer is itself a GitOps-managed, stateful Kubernetes workload, which shows platform skills a cloud bucket would not.
 - The code speaks plain S3, so moving to a cloud store later means changing an endpoint and credentials, not code.
 - Lineage runs end to end: image digest → commit (ADR 0006), and model → run → commit + data snapshot.
-- **One rebuild of the cluster is needed** to add the mount and the port mapping. `extraMounts` and `extraPortMappings` can't be added to a running `kind` cluster.
-- **After a rebuild,** the data folder survives, but Garage's admin token Secret and the workload key Secret are recreated by hand. `docs/cluster.md` lists the steps.
+- **One rebuild of the cluster is needed** to add the mount. `extraMounts` can't be added to a running `kind` cluster.
+- **Laptop access depends on a forward.** A long `dvc push` or an MLflow run can fail if the forward drops, for example when the pod restarts. The wrapper reports this, and DVC transfers can simply be run again. If forwards prove unreliable for daily work, a fixed `127.0.0.1` port mapping is the fallback. It needs another cluster rebuild and a change to Spec 0003's test.
+- **After a rebuild,** the data folder survives. `cluster-up.sh` regenerates Garage's own Secret (Spec 0004), and the workload key Secret is recreated by hand. `docs/cluster.md` lists the steps.
 - **Garage needs a one-time setup** after its first start: assign the node's layout, create the buckets, and create and grant the keys. Key creation is human-only. The spec decides whether the rest runs as a Job or as documented commands.
 - **Availability follows the owner's machine,** as ADR 0007 already accepts: when the laptop sleeps, so does the store.
 - **No copy off the machine.** That is acceptable because everything in the store can be rebuilt. The datasets come from public NOAA and Open-Meteo data plus committed code, and models can be retrained. The owner's normal machine backup covers the host folder. A second DVC remote (for example, an external drive) can be added later without changing this decision.
@@ -45,6 +47,7 @@ The project has no cloud budget. ADR 0007 already runs everything on the owner's
 
 ## Alternatives considered
 - **SeaweedFS:** the other strong self-hosted option. It is Apache-2.0, and `weed mini` runs the whole store in one process. It supports S3 object versioning, which DVC doesn't need because DVC is content-addressed. It runs more components (master, volume, filer, gateway), and it serves S3 without authentication when no credentials are configured, which is an easy mistake to make. Garage does one job: a small S3 store, built for self-hosting. It is AGPL-3.0, actively maintained, and widely recommended since MinIO's community edition ended.
+- **A fixed `127.0.0.1` port mapping** (`kind` `extraPortMappings`): always available and nothing to wrap. But a port listens the whole time the cluster runs, and the mapping would replace Spec 0003's no-host-ports rule. It is kept as the fallback above.
 - **MinIO community edition:** upstream stopped publishing binaries and images in October 2025, went into maintenance mode in December 2025, and archived its repo in February 2026 (unarchived briefly, then archived again in April 2026).
 - **AWS S3 (or Google Cloud Storage, Cloudflare R2):** reachable from CI and off the machine, and cheap at this volume. But each is an ongoing bill with no hard cap, plus an account, credentials, and IaC to keep up. The owner already has AWS experience, so S3 adds little to the portfolio.
 - **A plain-directory DVC remote and a file-based MLflow artifact store:** simplest, with no service to run. But cluster pods would need host mounts into the artifact folder, and the code would no longer speak S3, which is what makes a later move to the cloud cheap.
