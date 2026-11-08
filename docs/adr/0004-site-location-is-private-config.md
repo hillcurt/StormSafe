@@ -14,7 +14,7 @@ StormSafe is built for one outdoor pool facility, and the code needs that site's
   - In CI: nowhere. Tests use obviously fake values.
 - `.env.example` lists the site keys with blank values. Settings refuse to load without them.
 - Docs describe the site generically: *an outdoor pool facility within GOES-19 Geostationary Lightning Mapper coverage* (the Americas), which is the one real constraint on where the system can run.
-- MLflow tracking metadata (the tracking server and its database) stays local. Run artifacts live in the private bucket from ADR 0008, which keeps them private. The published model card describes the site without coordinates.
+- Experiment tracking (MLflow) stays local. The published model card describes the site without coordinates.
 - **Guards:**
   - A test fails if any tracked file contains the site values from the local `.env`. It runs on the owner's machine; CI has no `.env` and skips it.
   - The `reviewer` persona flags site values in any diff.

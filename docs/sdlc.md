@@ -51,6 +51,5 @@ Guardrails for what agents may touch live in `CLAUDE.md`.
 | `ci.yml` | every PR and every push to `trunk` | lint, types, tests, data-contract checks |
 | `train.yml` | manual | retrain, log to MLflow, metric-regression gate |
 | `build.yml` | every PR (build only); push to `trunk` and `vX.Y.Z` tags (build and push) | container image to GHCR, tagged by commit or release (ADR 0006) |
-| `infra.yml` | PR touching `infra/` (plan); push to `trunk` (apply, after approval in the `aws` environment); nightly + manual (drift check) | Terraform `fmt`, `validate`, `plan`, `apply` for `infra/aws/main/` via GitHub OIDC; plan summary only, never the full plan (ADR 0009) |
 | `deploy.yml` | manual + approval | promote registry stage; open the release PR that sets the image digest for Argo CD (ADR 0007) |
 | nightly outcomes job | nightly | join yesterday's predictions to observed GLM strikes; log recall, precision, and coverage |

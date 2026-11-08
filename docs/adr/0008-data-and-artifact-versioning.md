@@ -1,50 +1,58 @@
 # ADR 0008 — Data and artifact versioning
 
 **Status:** accepted
-**Date:** 2026-11-07
+**Date:** 2026-11-08
 
 ## Context
 Phase 2 builds training sets from GOES-19 GLM lightning and weather data. Phase 3 logs models to MLflow, and Phase 5 serving loads the registered model at startup (ADR 0006). The governance rule in `docs/sdlc.md` asks for versioned data snapshots, and Gate 2 asks for a pull that resumes after interruption. Every dataset and model has to trace back to the code and data that made it.
 
-The derived datasets are clipped to the site's radius, so anyone who can read them can work out the location. They must stay private (ADR 0004). The repo is public and the owner is on the GitHub Free plan. Expected volumes are small: site-clipped strike events plus hourly weather features come to a few GB at most, even over several seasons.
+The derived datasets are clipped to the site's radius, so anyone who can read them can work out the location. They must stay private (ADR 0004). Expected volumes are small: site-clipped strike events plus hourly weather features come to a few GB at most, even over several seasons.
 
-The store must be reachable from the owner's machine and from pods in the `kind` cluster. If `train.yml` runs on GitHub-hosted runners, it must be reachable from there too. GitHub runners cannot reach the owner's network (ADR 0007).
+The project has no cloud budget. ADR 0007 already runs everything on the owner's machine in a `kind` cluster, with no cloud cost and no exposed endpoints. The owner already has AWS experience, so a cloud bucket would add an ongoing bill without adding anything new to the portfolio.
 
 ## Decision
-- **Object store:** one private AWS S3 bucket in `us-east-1`, defined in Terraform like every AWS resource (ADR 0009), the same region as NOAA's public GOES-19 bucket. Block Public Access is on, default encryption (SSE-S3) is on, and bucket versioning is on. A lifecycle rule expires noncurrent versions after 90 days and aborts incomplete multipart uploads after 7 days.
-- **Layout:** two prefixes in one bucket, each with its own permissions:
-  - `dvc/`: the DVC remote.
-  - `mlflow/`: the MLflow artifact root.
+- **Object store:** a single-node **Garage** instance (S3-compatible, self-hosted) in the `kind` cluster, deployed by Argo CD from `deploy/` like every other workload (ADR 0007). Its image is pinned by digest.
+- **The data outlives the cluster.**
+  - Garage's data and metadata live in a folder on the host, outside the repo, mounted into the node with `kind`'s `extraMounts`. The folder's path is set in local config, not committed.
+  - `cluster-down.sh` deletes the cluster, not that folder.
+- **Reachable from the laptop only.** Garage's S3 port is mapped to `127.0.0.1` with `extraPortMappings`, so DVC and MLflow on the laptop reach it and nothing else on the network can. ADR 0007's "no exposed endpoints" still holds.
+- **Two buckets:**
+  - `dvc`: the DVC remote.
+  - `mlflow`: the MLflow artifact root.
+
+  Garage grants access per bucket, so two buckets give each identity only what it needs.
 - **Data versioning with DVC.** DVC versions the derived, site-specific datasets: daily GLM strike chunks, weather features, labels, and the built training set, each as one Parquet file per day. A snapshot is a git commit, because the committed `.dvc` / `dvc.lock` files pin the content hashes. Raw GLM files are not versioned: they are public and can be fetched again from NOAA, so they live only in a git-ignored local cache.
 - **Resume and publish are separate steps.** Long builds write chunks to local disk so they can resume (`CLAUDE.md` conventions). `dvc push` publishes a finished snapshot.
-- **Model artifacts:** stored under `mlflow/`. Every training run logs its git commit and the DVC hash of its training set, so the chain runs registered model → run → commit + data snapshot. Where the MLflow tracking server and registry run is not decided here (see Consequences).
-- **Config, not code.** The bucket name and region are not committed. The DVC remote's URL lives in the git-ignored `.dvc/config.local`, and app settings read it from `STORMSAFE_*` variables in `.env`. The repo stays usable for any site and any bucket.
-- **Identities are defined in Terraform (ADR 0009). Credentials are human-only** (`CLAUDE.md`) and never committed:
-  - Owner's machine: an IAM role with read and write on both prefixes, assumed through the owner's SSO session, with no long-lived keys.
-  - Cluster: an IAM user with read-only access on `mlflow/`. The owner creates its access key by hand, so the key is never in Terraform state, and stores it in a hand-made Secret (ADR 0007). A later spec that needs a cluster job to write (for example, the nightly outcomes job) widens this scope in its own PR.
-  - CI: none. Tests use local fixtures and never touch the bucket. If `train.yml` later runs on GitHub-hosted runners, it assumes a scoped IAM role through GitHub OIDC, with no long-lived keys; that spec decides the details.
-- **Cost guard:** an AWS Budgets alert at $5 per month, defined in Terraform.
+- **Model artifacts:** stored in the `mlflow` bucket. Every training run logs its git commit and the DVC hash of its training set, so the chain runs registered model → run → commit + data snapshot. MLflow tracking metadata stays local (ADR 0004). Where the tracking server and registry run is not decided here (see Consequences).
+- **Config, not code.** The endpoint, bucket names, and the host data path are config. The DVC remote's settings live in the git-ignored `.dvc/config.local`, and app settings read them from `STORMSAFE_*` variables in `.env`. The repo stays usable for any site and any S3-compatible store.
+- **Credentials are human-only** (`CLAUDE.md`). The owner creates Garage's admin token and access keys with the `garage` CLI, and none are committed:
+  - Owner's laptop: one key, read and write on both buckets, kept in `.dvc/config.local` and `.env`.
+  - Cluster workloads: one key, read-only on `mlflow`, kept in a hand-made Secret (ADR 0007). A later spec that needs a cluster job to write (for example, the nightly outcomes job) widens this in its own PR.
+  - CI: none. Tests use local fixtures and never touch the store.
 
 ## Consequences
+- No cloud account, no bill, and no cloud credentials. The data never leaves the owner's machine, which settles ADR 0004 for data and models.
+- The storage layer is itself a GitOps-managed, stateful Kubernetes workload, which shows platform skills a cloud bucket would not.
+- The code speaks plain S3, so moving to a cloud store later means changing an endpoint and credentials, not code.
 - Lineage runs end to end: image digest → commit (ADR 0006), and model → run → commit + data snapshot.
-- The store is reachable from the laptop, the cluster, and later from CI, without exposing the owner's network.
-- Rebuilding the cluster loses no data or models; only the cluster's read-only Secret has to be recreated. The runbook (Phase 6) lists the steps.
-- New dependency: an AWS account, plus the Terraform stacks that manage it (ADR 0009). The cluster's access key is rotated by hand, and the runbook covers it.
-- Cost at this volume is cents per month (S3 Standard is about $0.023 per GB-month). AWS has no hard spend cap, so the budget alert is the guard.
-- The data sits on a third party's infrastructure. It is private, encrypted at rest, and readable only by the two identities above, plus the owner's admin identity that runs Terraform.
-- A fresh clone without credentials can't `dvc pull`. Results stay reproducible for the owner, as ADR 0004 already accepts.
-- ADR 0004 is narrowed in this change: its "MLflow stays local" now covers tracking metadata only, and artifacts live here.
+- **One rebuild of the cluster is needed** to add the mount and the port mapping. `extraMounts` and `extraPortMappings` can't be added to a running `kind` cluster.
+- **After a rebuild,** the data folder survives, but Garage's admin token Secret and the workload key Secret are recreated by hand. `docs/cluster.md` lists the steps.
+- **Garage needs a one-time setup** after its first start: assign the node's layout, create the buckets, and create and grant the keys. Key creation is human-only. The spec decides whether the rest runs as a Job or as documented commands.
+- **Availability follows the owner's machine,** as ADR 0007 already accepts: when the laptop sleeps, so does the store.
+- **No copy off the machine.** That is acceptable because everything in the store can be rebuilt. The datasets come from public NOAA and Open-Meteo data plus committed code, and models can be retrained. The owner's normal machine backup covers the host folder. A second DVC remote (for example, an external drive) can be added later without changing this decision.
+- **GitHub-hosted runners can't reach the store.** Training needs the data, so `train.yml` can't simply run on a hosted runner. The Phase 3 training spec decides how training runs: locally, or as a Job in the cluster, triggered by a reviewed change.
 - **Open:** tracking metadata stays local for now, but serving in the cluster needs a reachable registry (ADR 0006). Where the tracking server and registry run gets its own ADR before the Phase 3 training spec.
 
 ## Alternatives considered
-- **Cloudflare R2:** S3-compatible, so DVC and MLflow work against it through an endpoint URL. It has a 10 GB free tier and no egress fees. It is the close second. At this volume, egress doesn't matter and both cost about nothing. S3 with IAM roles and GitHub OIDC is the pattern ML platform teams use most, which this project is meant to show.
-- **A self-hosted S3-compatible store in the `kind` cluster (Garage, SeaweedFS):** no cloud account, and the data never leaves the machine. But the data would live in a cluster built to be disposable, so every rebuild becomes a restore. It is unreachable from CI, its availability follows the laptop, and it is one more stateful service to back up. MinIO's community edition is out: upstream went into maintenance mode in December 2025, stopped publishing binaries and images in October 2025, and archived its repo in February 2026 (unarchived briefly, then archived again in April 2026).
-- **A local or external-drive DVC remote:** simplest, but there is no copy off the machine, and cluster pods and CI can't reach it without host mounts.
+- **SeaweedFS:** the other strong self-hosted option. It is Apache-2.0, and `weed mini` runs the whole store in one process. It supports S3 object versioning, which DVC doesn't need because DVC is content-addressed. It runs more components (master, volume, filer, gateway), and it serves S3 without authentication when no credentials are configured, which is an easy mistake to make. Garage does one job: a small S3 store, built for self-hosting. It is AGPL-3.0, actively maintained, and widely recommended since MinIO's community edition ended.
+- **MinIO community edition:** upstream went into maintenance mode in December 2025, stopped publishing binaries and images in October 2025, and archived its repo in February 2026 (unarchived briefly, then archived again in April 2026).
+- **AWS S3 (or Google Cloud Storage, Cloudflare R2):** reachable from CI and off the machine, and cheap at this volume. But each is an ongoing bill with no hard cap, plus an account, credentials, and IaC to keep up. The owner already has AWS experience, so S3 adds little to the portfolio.
+- **A plain-directory DVC remote and a file-based MLflow artifact store:** simplest, with no service to run. But cluster pods would need host mounts into the artifact folder, and the code would no longer speak S3, which is what makes a later move to the cloud cheap.
 - **Git LFS on GitHub:** the repo is public, so its LFS objects would be public too. This fails ADR 0004.
-- **Google Cloud Storage or Backblaze B2:** comparable, with no advantage for this project.
-- **S3 object versioning alone, without DVC:** keeps old bytes, but no git commit points at the exact dataset a run used.
 - **lakeFS instead of DVC:** built for data lakes far larger than this, and a server to run. DVC is file-level, git-native, and fits one owner. lakeFS took over stewardship of DVC in November 2025, and DVC stays open source with continued maintenance ([DVC FAQ](https://dvc.org/blog/dvc-joins-lakefs-your-questions-answered/)), which lowers the maintenance risk.
 
 ## References
-- MinIO community edition status: [It's FOSS, "MinIO moves away from open source"](https://itsfoss.com/news/minio-moves-away-from-open-source/) (maintenance mode December 2025; repo archived February and April 2026)
-- DVC stewardship: [lakeFS acquires DVC](https://lakefs.io/blog/lakefs-acquires-dvc/) (November 18, 2025); [DVC FAQ](https://dvc.org/blog/dvc-joins-lakefs-your-questions-answered/)
+- Garage: [project site](https://garagehq.deuxfleurs.fr/) and [source](https://git.deuxfleurs.fr/Deuxfleurs/garage)
+- SeaweedFS: [repository](https://github.com/seaweedfs/seaweedfs)
+- MinIO community edition status: [It's FOSS, "MinIO moves away from open source"](https://itsfoss.com/news/minio-moves-away-from-open-source/)
+- DVC stewardship: [lakeFS acquires DVC](https://lakefs.io/blog/lakefs-acquires-dvc/) (November 18, 2025)
