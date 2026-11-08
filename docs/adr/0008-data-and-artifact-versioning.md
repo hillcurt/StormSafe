@@ -38,12 +38,12 @@ The store must be reachable from the owner's machine and from pods in the `kind`
 
 ## Alternatives considered
 - **Cloudflare R2:** S3-compatible, so DVC and MLflow work against it through an endpoint URL. It has a 10 GB free tier and no egress fees. It is the close second. At this volume, egress doesn't matter and both cost about nothing. S3 with IAM roles and GitHub OIDC is the pattern ML platform teams use most, which this project is meant to show.
-- **A self-hosted S3-compatible store in the `kind` cluster (Garage, SeaweedFS):** no cloud account, and the data never leaves the machine. But the data would live in a cluster built to be disposable, so every rebuild becomes a restore. It is unreachable from CI, its availability follows the laptop, and it is one more stateful service to back up. MinIO's community edition is out: upstream went into maintenance mode in December 2025, stopped publishing binaries and images, and archived its repo in 2026.
+- **A self-hosted S3-compatible store in the `kind` cluster (Garage, SeaweedFS):** no cloud account, and the data never leaves the machine. But the data would live in a cluster built to be disposable, so every rebuild becomes a restore. It is unreachable from CI, its availability follows the laptop, and it is one more stateful service to back up. MinIO's community edition is out: upstream went into maintenance mode in December 2025, stopped publishing binaries and images in October 2025, and archived its repo in February 2026 (unarchived briefly, then archived again in April 2026).
 - **A local or external-drive DVC remote:** simplest, but there is no copy off the machine, and cluster pods and CI can't reach it without host mounts.
 - **Git LFS on GitHub:** the repo is public, so its LFS objects would be public too. This fails ADR 0004.
 - **Google Cloud Storage or Backblaze B2:** comparable, with no advantage for this project.
 - **S3 object versioning alone, without DVC:** keeps old bytes, but no git commit points at the exact dataset a run used.
-- **lakeFS instead of DVC:** built for data lakes far larger than this, and a server to run. DVC is file-level, git-native, and fits one owner. lakeFS took over stewardship of DVC in November 2025, which lowers the maintenance risk.
+- **lakeFS instead of DVC:** built for data lakes far larger than this, and a server to run. DVC is file-level, git-native, and fits one owner. lakeFS took over stewardship of DVC in November 2025, and DVC stays open source with continued maintenance ([DVC FAQ](https://dvc.org/blog/dvc-joins-lakefs-your-questions-answered/)), which lowers the maintenance risk.
 
 ## References
 - MinIO community edition status: [It's FOSS, "MinIO moves away from open source"](https://itsfoss.com/news/minio-moves-away-from-open-source/) (maintenance mode December 2025; repo archived February and April 2026)
