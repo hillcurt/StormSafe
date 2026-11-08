@@ -35,13 +35,14 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] Owner picked Phase 2 first; the container build spec waits until before Phase 5
 - [x] ADR 0008: data and artifact versioning (Garage in the `kind` cluster on a host folder; DVC remote + MLflow artifact buckets; credentials human-only; no cloud)
 - [x] ADR 0008 amendment: the laptop reaches the store through a `127.0.0.1`-only `kubectl port-forward` wrapper, not a host port mapping; Spec 0003's no-host-ports rule stays
-- [ ] Next spec: local object store per ADR 0008 (`kind` `extraMounts`, Garage manifests synced by Argo CD, port-forward wrapper, one-time setup steps, `docs/cluster.md` rebuild steps)
-- [ ] Owner: rebuild the cluster, create Garage's admin token and keys, and the cluster Secret (human-only)
+- [x] Spec 0004: local object store — spec approved (owner answered the four open questions)
+- [ ] Spec 0004: implementation (plan, tests, code)
+- [ ] Owner: rebuild the cluster, run `store-init.sh`, create the keys, and record the Spec 0004 demo (human-only)
 - [ ] Then spec: DVC and MLflow wiring per ADR 0008 (`dvc init`, remote via `.dvc/config.local`, settings keys, a guard that no endpoint keys or host paths are committed)
 
 ## Later
 - Revisit a fixed `127.0.0.1` port mapping for the store if port-forwards prove unreliable for daily `dvc` and MLflow work (ADR 0008 fallback; needs a rebuild and a change to Spec 0003's test)
-- Dedicated Argo CD `AppProject` for `stormsafe`: source limited to this repo, destination to the `stormsafe` namespace, no cluster-scoped kinds (least privilege with prune and self-heal; from the infra review on #15). Before the first real workload
+- Dedicated Argo CD `AppProject` for `stormsafe`: source limited to this repo, destination to the `stormsafe` namespace, no cluster-scoped kinds beyond what workloads need (least privilege with prune and self-heal; from the infra review on #15). Lands with Spec 0004
 - `infra-reviewer` follows `REVIEW.md` like `reviewer`: reads earlier comments, treats unanswered findings as blocking (pass 8); a test keeps both personas pointed at `REVIEW.md`. Before wiring it into `ai-review.yml`
 - Spec: throwaway `kind` cluster in CI that runs `cluster-up.sh` on PRs touching `deploy/`; first settle in `CLAUDE.md` whether a disposable CI cluster counts as "a live cluster" (human-only). Worth it once there's a real workload
 - Automated dependency update PRs (Renovate or Dependabot) for the commit- and digest-pinned actions and images; also pin the CI runner image or the tools it supplies (`jq`, used by the image pin check)
