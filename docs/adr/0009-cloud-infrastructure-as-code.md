@@ -52,6 +52,12 @@ Constraints:
   - Human-accepted: any new or widened workflow `permissions:` (`infra.yml` needs `id-token: write`), any change to an IAM trust policy, and any change to the workflow roles' permissions.
   - Human-only: approving the `aws` environment (the apply), the local bootstrap apply, any state operation, and the GitHub secrets.
 - The data bucket also gets `prevent_destroy`, so a bad plan can't delete the snapshots.
+- **Public-repo hardening.** The code is public by design: safety comes from credentials and trust, not from hiding it.
+  - **Exact OIDC trust.** Each role's trust policy requires `aud` = `sts.amazonaws.com` and an exact `sub`, never a wildcard such as `repo:hillcurt/*`. A policy scanner (for example, checkov) runs on `infra/` in `infra.yml` and fails on a wildcard `sub`.
+  - **No fork code with credentials.** `infra.yml` uses `pull_request`, never `pull_request_target`. Repo settings require approval before Actions runs for outside contributors.
+  - **Apply only from `trunk`.** The `aws` environment requires the owner's approval and allows only the `trunk` branch.
+  - **No private values in git.** `.gitignore` covers `*.tfstate*`, `*.tfvars`, `backend.hcl`, and `.terraform/`. GitHub secret scanning and push protection are on. A test fails if a tracked file contains the bucket names or account ID from the local, git-ignored config, like ADR 0004's site-value test.
+  - **Push access is the trust boundary for the plan role.** A branch can edit `infra.yml` and get the read-only plan role, so adding a collaborator means reviewing this ADR first.
 
 ## Consequences
 - Every change to AWS is a reviewed PR, a visible plan, an approved apply, and a run log on `trunk`. It can be rebuilt from the repo plus the secrets.
@@ -59,6 +65,7 @@ Constraints:
 - Approving the `aws` environment is the one manual step per apply, which matches "no auto-merge" (`docs/sdlc.md`).
 - **The bootstrap stack is the trust boundary** and is applied by hand. Mistakes there (an over-broad trust condition) give the workflow too much power, so it gets the strictest review. The state bucket must never be deleted; the runbook (Phase 6) covers recovering it.
 - Masking depends on GitHub's secret masking. Error messages that contain a value are masked as well, but `infra-reviewer` checks that `infra.yml` never writes plan files, `terraform show` output, or state anywhere public.
+- Repo settings (secret scanning, push protection, approval for outside contributors, the `aws` environment's branch rule) are set by the owner and listed in the runbook. They are not managed in code (this ADR covers AWS only).
 - The same OIDC pattern is ready for `train.yml` on hosted runners (ADR 0008).
 - `CLAUDE.md` gains a guardrail row for `infra/` and `infra.yml`, and its infra-reviewer rule covers `infra/`. The `infra-reviewer` persona doesn't check Terraform yet; widening its scope is on the roadmap.
 
