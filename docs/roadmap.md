@@ -32,7 +32,11 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - [x] Spec 0003: owner's demo, Synced and Healthy (recorded on the PR; screenshot waived); spec status → `done`
 - [x] Spec 0003: owner re-ran `cluster-up.sh` on the fixed script; the Application's generation stayed the same (the first second-run had exposed an apply-then-patch flip)
 - [x] `CLAUDE.md`: the agent runs `infra-reviewer` locally before opening infra PRs and answers its findings in the PR
-- [ ] Next spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention, ADR 0006) or Phase 2's data and artifact versioning ADR — owner picks
+- [x] Owner picked Phase 2 first; the container build spec waits until before Phase 5
+- [x] ADR 0008: data and artifact versioning (Garage in the `kind` cluster on a host folder, `127.0.0.1`-only S3 port; DVC remote + MLflow artifact buckets; credentials human-only; no cloud)
+- [ ] Next spec: local object store per ADR 0008 (`kind` `extraMounts` + `extraPortMappings`, Garage manifests synced by Argo CD, one-time setup steps, `docs/cluster.md` rebuild steps)
+- [ ] Owner: rebuild the cluster, create Garage's admin token and keys, and the cluster Secret (human-only)
+- [ ] Then spec: DVC and MLflow wiring per ADR 0008 (`dvc init`, remote via `.dvc/config.local`, settings keys, a guard that no endpoint keys or host paths are committed)
 
 ## Later
 - Dedicated Argo CD `AppProject` for `stormsafe`: source limited to this repo, destination to the `stormsafe` namespace, no cluster-scoped kinds (least privilege with prune and self-heal; from the infra review on #15). Before the first real workload
@@ -43,7 +47,8 @@ Each milestone ends with something demo-able and a passed gate (see `docs/sdlc.m
 - `CLAUDE.md` rule: the agent may write workflows, but any new or widened `permissions:` is human-accepted. Lands with the container build spec, the first workflow with `packages: write` (from the reviewer on #12)
 - Spec: container build (`Dockerfile`, `build.yml`, `sha-*` retention), per ADR 0006, before Phase 5
 - ADR + spec: Claude Code hooks for rules that must always hold (no `git add -A`, no site values, no test edits during bug fixes, `plan.md` kept current)
-- Phase 2, first: ADR + spec for data and artifact versioning. The ADR chooses the object store (for example, AWS S3 or a self-hosted S3-compatible store) and records why. Constraints: works as a DVC remote and for MLflow artifacts; data stays private (ADR 0004)
+- ADR: where the MLflow tracking server and registry run (tracking metadata is local, ADR 0004; serving in the cluster needs a reachable registry, ADR 0006). Before the Phase 3 training spec (from ADR 0008)
+- Phase 3: how training runs now that GitHub-hosted runners can't reach the store (locally, or a cluster Job from a reviewed change); update `train.yml` in `docs/sdlc.md` to match (from ADR 0008)
 - Phase 2: evals for agent personas (seeded PRs the reviewer must catch), run when agent config changes
 - Phase 6: monitoring breaches generate `intent.md`; escalation bands 1σ / 2σ / 3σ
 - Process metrics: first-pass CI success for agent-written PRs, time to first review, DORA metrics
