@@ -41,8 +41,8 @@ if [[ -z "$store_dir" && -f "$ROOT/.env" ]]; then
 fi
 [[ -n "$store_dir" ]] \
   || die "set STORMSAFE_STORE_HOST_DIR in .env: a folder outside the repo for the store's data (docs/cluster.md)"
-if [[ "$store_dir" == "~/"* ]]; then
-  store_dir="$HOME/${store_dir#"~/"}"
+if [[ "$store_dir" == \~/* ]]; then
+  store_dir="$HOME/${store_dir#\~/}"
 fi
 [[ "$store_dir" == /* ]] || die "STORMSAFE_STORE_HOST_DIR must be an absolute path"
 # The path goes into a sed replacement, where | ends the expression and & and \ are special.

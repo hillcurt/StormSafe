@@ -420,6 +420,14 @@ def test_cluster_up_renders_mount_and_secret(tmp_path: Path) -> None:
 
 
 @needs_openssl
+def test_cluster_up_expands_home_in_store_dir(tmp_path: Path) -> None:
+    proc, log = run_cluster_up(tmp_path, "~/store")
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "store").is_dir(), "~/ is the owner's home"
+    assert values((log / "kind-config.yaml").read_text(), "hostPath") == [str(tmp_path / "store")]
+
+
+@needs_openssl
 def test_cluster_up_keeps_an_existing_secret(tmp_path: Path) -> None:
     proc, log = run_cluster_up(tmp_path, str(tmp_path / "store"), secret_missing=False)
     assert proc.returncode == 0, proc.stderr

@@ -27,6 +27,7 @@ fi
 
 pf_log="$(mktemp)"
 pf_pid=""
+# shellcheck disable=SC2329 # invoked by the EXIT trap
 cleanup() {
   if [[ -n "$pf_pid" ]]; then
     kill "$pf_pid" 2>/dev/null || true
