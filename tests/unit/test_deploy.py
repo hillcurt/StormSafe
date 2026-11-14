@@ -91,13 +91,23 @@ def test_application_targets_trunk_overlay() -> None:
     assert field(sync[1], "selfHeal") == "true"
 
 
-def test_base_is_the_namespace_only() -> None:
+def test_base_kinds_are_exact() -> None:
+    """Base holds the namespace (spec 0003) and Garage (spec 0004), and nothing else."""
     kinds = [
         kind
         for path in yaml_files(DEPLOY / "base")
         for kind in re.findall(r"^kind:\s*(\S+)", path.read_text(), re.MULTILINE)
     ]
-    assert sorted(kinds) == ["Kustomization", "Namespace"]
+    assert sorted(kinds) == [
+        "ConfigMap",
+        "Kustomization",
+        "Kustomization",
+        "Namespace",
+        "PersistentVolume",
+        "PersistentVolumeClaim",
+        "Service",
+        "StatefulSet",
+    ]
     overlay = (DEPLOY / "overlays" / "local" / "kustomization.yaml").read_text()
     assert "../../base" in overlay
 
