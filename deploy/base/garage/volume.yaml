@@ -1,0 +1,32 @@
+# Garage's data and metadata live in a host folder outside the repo, mounted into the kind node
+# at /var/lib/stormsafe/store (deploy/cluster/kind-config.yaml). It survives cluster-down.sh.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: stormsafe-garage-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  claimRef:
+    namespace: stormsafe
+    name: garage-data
+  hostPath:
+    path: /var/lib/stormsafe/store
+    type: Directory
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: garage-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  volumeName: stormsafe-garage-data
+  resources:
+    requests:
+      storage: 20Gi

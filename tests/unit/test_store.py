@@ -178,9 +178,9 @@ def test_application_uses_stormsafe_project() -> None:
 
 def test_appproject_is_least_privilege() -> None:
     text = (ARGOCD / "appproject.yaml").read_text()
-    assert values(text, "kind") == ["AppProject"]
+    assert kinds(text) == ["AppProject"]
     assert values(text, "namespace") == ["argocd", "stormsafe"], "lives with Argo CD"
-    repos = text.split("sourceRepos:", 1)[1].split(":", 1)[0]
+    repos = text.split("sourceRepos:", 1)[1].split("destinations:", 1)[0]
     assert re.findall(r"^\s*-\s*(\S+)", repos, re.MULTILINE) == [
         "https://github.com/hillcurt/StormSafe.git"
     ], "this repo is the only source"

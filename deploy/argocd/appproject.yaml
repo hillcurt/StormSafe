@@ -1,0 +1,20 @@
+# The stormsafe project (spec 0004): least privilege for an Application with prune and
+# self-heal. Applied by scripts/cluster-up.sh together with application.yaml, after Argo CD's
+# CRDs exist, so it is not in this folder's kustomization.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: stormsafe
+  namespace: argocd
+spec:
+  description: StormSafe workloads, synced from this repo only
+  sourceRepos:
+    - https://github.com/hillcurt/StormSafe.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: stormsafe
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+    - group: ""
+      kind: PersistentVolume

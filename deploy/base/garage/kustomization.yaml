@@ -1,0 +1,13 @@
+# Single-node Garage object store (ADR 0008, spec 0004). Plain manifests, synced by Argo CD.
+# Its Secret (`garage`: rpc-secret, admin-token) is created by scripts/cluster-up.sh, never here.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: stormsafe
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: stormsafe
+resources:
+  - configmap.yaml
+  - volume.yaml
+  - service.yaml
+  - statefulset.yaml

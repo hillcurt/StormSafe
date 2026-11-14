@@ -1,0 +1,14 @@
+# The S3 API only. In-cluster clients use it; scripts/store-forward.sh port-forwards to it on
+# 127.0.0.1. RPC (3901) and the admin API (3903) stay inside the pod.
+apiVersion: v1
+kind: Service
+metadata:
+  name: garage
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: garage
+  ports:
+    - name: s3
+      port: 3900
+      targetPort: s3
