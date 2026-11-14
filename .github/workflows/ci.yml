@@ -87,7 +87,7 @@ jobs:
           kubeconform -strict -summary -skip CustomResourceDefinition \
             -kubernetes-version "$KUBERNETES_VERSION" \
             -schema-location "$K8S_SCHEMAS" -schema-location "$CRD_SCHEMAS" \
-            "$RUNNER_TEMP"/rendered/*.yaml deploy/argocd/application.yaml
+            "$RUNNER_TEMP"/rendered/*.yaml deploy/argocd/application.yaml deploy/argocd/appproject.yaml
 
       - name: No Secret values applied; no Secrets synced by Argo CD
         run: |

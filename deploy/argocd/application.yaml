@@ -6,7 +6,7 @@ metadata:
   name: stormsafe
   namespace: argocd
 spec:
-  project: default
+  project: stormsafe
   source:
     repoURL: https://github.com/hillcurt/StormSafe.git
     targetRevision: trunk
