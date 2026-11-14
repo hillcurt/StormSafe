@@ -112,7 +112,7 @@ Nothing secret lives in git (ADR 0004, ADR 0007). The Argo CD install does creat
 ## Troubleshooting
 
 - **`stormsafe` stays OutOfSync or Missing before a branch merges:** the Application tracks `trunk`. Use `STORMSAFE_REVISION` (above).
-- **Images fail to pull:** check Docker Desktop is running and has network access; the cluster pulls from `quay.io`, `ghcr.io`, and `public.ecr.aws`.
+- **Images fail to pull:** check Docker Desktop is running and has network access; the cluster pulls from `quay.io`, `ghcr.io`, `public.ecr.aws`, and Docker Hub (`dxflrs/garage`).
 - **Garage stays Pending or can't start:** check `cluster-up.sh`'s output for the missing-mount warning, and that the data folder is shared with Docker Desktop (above). `kubectl --context kind-stormsafe -n stormsafe logs garage-0` shows Garage's own errors.
 - **`store-init.sh` can't read the layout version:** Garage's CLI output changed. The script stops rather than guess; update its `sed` pattern for the pinned version.
 - **Start clean:** `scripts/cluster-down.sh && scripts/cluster-up.sh`. To start the store from nothing as well, empty the data folder before `cluster-up.sh`, then run `store-init.sh` and create the keys again.
