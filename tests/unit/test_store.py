@@ -187,9 +187,11 @@ def test_appproject_is_least_privilege() -> None:
     dest = text.split("destinations:", 1)[1].split("clusterResourceWhitelist:", 1)[0]
     assert values(dest, "namespace") == ["stormsafe"], "stormsafe is the only destination"
     assert values(dest, "server") == ["https://kubernetes.default.svc"]
-    allowed = text.split("clusterResourceWhitelist:", 1)[1]
+    allowed = text.split("clusterResourceWhitelist:", 1)[1].split("namespaceResourceBlacklist:")[0]
     assert sorted(values(allowed, "kind")) == ["Namespace", "PersistentVolume"]
     assert values(allowed, "group") == ["", ""], "core API group only"
+    denied = text.split("namespaceResourceBlacklist:", 1)
+    assert len(denied) == 2 and values(denied[1], "kind") == ["Secret"], "Argo CD syncs no Secret"
     assert "*" not in text, "no wildcards"
 
 
@@ -230,7 +232,8 @@ def test_store_forward_binds_loopback_and_cleans_up() -> None:
     for line in calls:
         if "kubectl" in line or line.startswith("kc "):
             assert "--address 127.0.0.1" in line, f"bind 127.0.0.1 only: {line}"
-            assert "svc/garage" in line and "3900:3900" in line
+            assert "svc/garage" in line and '"$PORT:$PORT"' in line
+    assert re.search(r"^PORT=3900$", script, re.MULTILINE), "the S3 port"
     assert "0.0.0.0" not in script and "--address localhost" not in script
     assert re.search(r"trap\s+\S+\s+EXIT", script), "close the forward on every exit"
     assert re.search(r"trap\s+.+\s+INT", script), "Ctrl-C closes the forward"
@@ -373,9 +376,15 @@ def test_cluster_up_refuses_without_store_dir(tmp_path: Path) -> None:
     assert not kind_created(log), "refuse before creating anything"
 
 
-@pytest.mark.parametrize("bad", ["inside-repo", "relative/store"])
+@pytest.mark.parametrize("bad", ["inside-repo", "symlink-into-repo", "relative/store"])
 def test_cluster_up_refuses_bad_store_dir(tmp_path: Path, bad: str) -> None:
-    store = str(tmp_path / "repo" / "data") if bad == "inside-repo" else bad
+    store = bad
+    if bad == "inside-repo":
+        store = str(tmp_path / "repo" / "data")
+    elif bad == "symlink-into-repo":
+        (tmp_path / "repo" / "data").mkdir(parents=True)
+        (tmp_path / "link").symlink_to(tmp_path / "repo" / "data")
+        store = str(tmp_path / "link")
     proc, log = run_cluster_up(tmp_path, store)
     assert proc.returncode != 0, f"must refuse {store}"
     assert "STORMSAFE_STORE_HOST_DIR" in proc.stderr

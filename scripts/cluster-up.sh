@@ -48,10 +48,16 @@ fi
 # The path goes into a sed replacement, where | ends the expression and & and \ are special.
 [[ "$store_dir" != *[\|\&\\]* ]] || die "STORMSAFE_STORE_HOST_DIR must not contain | & or \\"
 store_dir="${store_dir%/}"
-case "$store_dir/" in
-  "$ROOT"/*) die "STORMSAFE_STORE_HOST_DIR must be outside the repo, so the data is never committed" ;;
-esac
+outside_repo() {
+  case "$1/" in
+    "$2"/*) die "STORMSAFE_STORE_HOST_DIR must be outside the repo, so the data is never committed" ;;
+  esac
+}
+outside_repo "$store_dir" "$ROOT"
 mkdir -p "$store_dir"
+# Again on resolved paths, so a symlink into the repo is caught too.
+store_dir="$(cd "$store_dir" && pwd -P)"
+outside_repo "$store_dir" "$(cd "$ROOT" && pwd -P)"
 
 kc() { kubectl --context "$CONTEXT" "$@"; }
 

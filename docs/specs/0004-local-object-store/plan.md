@@ -8,7 +8,7 @@ Plain Kustomize manifests for a single-node Garage under `deploy/base/garage/`, 
 
 `cluster-up.sh` gains three things: the host folder, a mount check on a running cluster, and Garage's Secret. It reads `STORMSAFE_STORE_HOST_DIR` from the environment or `.env`, and refuses to run without it. It renders the `kind` config's placeholder into a temporary file only when creating a cluster. After it applies the Application, it waits for Argo CD to create the `stormsafe` namespace. Then it creates Garage's Secret from `openssl rand` if the Secret is missing, and only then waits for Synced and Healthy. The Garage pod waits for the Secret to appear (`CreateContainerConfigError`, retried by the kubelet).
 
-A new `stormsafe` `AppProject` replaces `default`. It allows this repo as the only source and `stormsafe` as the only destination namespace, plus `Namespace` and `PersistentVolume` as cluster-scoped kinds. It is applied in the same apply as the Application, after Argo CD's CRDs are established. It can't go in `deploy/argocd/kustomization.yaml`: that apply also creates the `AppProject` CRD, and a CR in the same apply as its CRD fails on a fresh cluster.
+A new `stormsafe` `AppProject` replaces `default`. It allows this repo as the only source and `stormsafe` as the only destination namespace, plus `Namespace` and `PersistentVolume` as cluster-scoped kinds. It also denies `Secret`, so Argo CD can't sync one even if it reached `trunk` (added after infra review). It is applied in the same apply as the Application, after Argo CD's CRDs are established. It can't go in `deploy/argocd/kustomization.yaml`: that apply also creates the `AppProject` CRD, and a CR in the same apply as its CRD fails on a fresh cluster.
 
 ## Pinned versions
 | What | Version | Pin |
@@ -21,7 +21,7 @@ A new `stormsafe` `AppProject` replaces `default`. It allows this repo as the on
 - **Metadata engine: `sqlite`.** Garage v2 defaults to LMDB, which memory-maps its file. The metadata lives on a Docker Desktop shared folder (virtiofs), where memory-mapped databases are a known corruption risk. SQLite is slower, but it is plenty for one user's DVC and MLflow traffic.
 - **S3 region `garage`.** Clients must send the same region. `docs/cluster.md` sets `AWS_REGION=garage` for the demo commands.
 - **Bind addresses `0.0.0.0`.** The cluster is IPv4-only (kind's default). RPC listens on 3901 inside the pod only; the Service exposes 3900 alone.
-- **Host folder checks.** `STORMSAFE_STORE_HOST_DIR` must be an absolute path (a leading `~/` is expanded), must not contain `|` (the `sed` delimiter), and must not be inside the repo, so data can't be committed by accident (ADR 0008).
+- **Host folder checks.** `STORMSAFE_STORE_HOST_DIR` must be an absolute path (a leading `~/` is expanded), must not contain `|` (the `sed` delimiter), and must not be inside the repo, checked again on the resolved path so a symlink can't get around it. That way data can't be committed by accident (ADR 0008).
 
 ## Files
 | File | Create / change | Why |

@@ -38,7 +38,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-kubectl --context "$CONTEXT" -n "$NAMESPACE" port-forward --address 127.0.0.1 svc/garage 3900:3900 >"$pf_log" 2>&1 &
+kubectl --context "$CONTEXT" -n "$NAMESPACE" port-forward --address 127.0.0.1 svc/garage "$PORT:$PORT" >"$pf_log" 2>&1 &
 pf_pid=$!
 
 forward_alive() { kill -0 "$pf_pid" 2>/dev/null; }

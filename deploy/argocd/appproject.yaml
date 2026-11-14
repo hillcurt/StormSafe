@@ -18,3 +18,8 @@ spec:
       kind: Namespace
     - group: ""
       kind: PersistentVolume
+  # Argo CD never syncs a Secret (ADR 0004, ADR 0007), even if one reached trunk: the ones the
+  # workloads need are made by hand or by cluster-up.sh.
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: Secret
